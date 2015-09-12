@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
- #include <ctype.h>
-
+#include <ctype.h>
 
 enum state{
   word,
@@ -16,29 +15,26 @@ enum state{
   C_operator,
   error
 };
-
+enum entry{
+  alpha,
+  zero,
+  oneToNine,
+  symbol
+};
 
 struct TokenizerT_ {
   char *string;
   enum state current_state;
-  int length;
+  enum entry init_state;
+  void (*transition)(struct TokenizerT_);
+  char *start;
+  char *curr;
+  char *end;
 };
 
 typedef struct TokenizerT_ TokenizerT;
 
-/*
- * TKCreate creates a new TokenizerT object for a given token stream
- * (given as a string).
- * 
- * TKCreate should copy the arguments so that it is not dependent on
- * them staying immutable after returning.  (In the future, this may change
- * to increase efficiency.)
- *
- * If the function succeeds, it returns a non-NULL TokenizerT.
- * Else it returns NULL.
- *
- * You need to fill in this function as part of your implementation.
- */
+
 TokenizerT *TKCreate( char * ts ) {
 
   if(ts==NULL){
@@ -47,142 +43,165 @@ TokenizerT *TKCreate( char * ts ) {
 
   TokenizerT *new_tokenizer =(TokenizerT*)malloc(sizeof(TokenizerT));
 
-  new_tokenizer->string = (char*)malloc(strlen(ts)*sizeof(char));
+  new_tokenizer->string = (char*)malloc(strlen(ts)+1 * sizeof(char));
   strcpy(new_tokenizer->string,ts);
 
   new_tokenizer->current_state = word;
-  new_tokenizer->length = 0;
+  new_tokenizer->init_state=alpha;
+  new_tokenizer->start = new_tokenizer->string;
+  new_tokenizer->curr = new_tokenizer->string;
+  new_tokenizer->end = new_tokenizer->string;
   
 
   return new_tokenizer;
 }
 
 
-
-
-/*
- * TKDestroy destroys a TokenizerT object.  It should free all dynamically
- * allocated memory that is part of the object being destroyed.
- *
- * You need to fill in this function as part of your implementation.
- */
 void TKDestroy( TokenizerT * tk ) {
   free(tk->string);
   free(tk);
 }
 
 
-
-
-/*
- * TKGetNextToken returns the next token from the token stream as a
- * character string.  Space for the returned token should be dynamically
- * allocated.  The caller is responsible for freeing the space once it is
- * no longer needed.
- *
- * If the function succeeds, it returns a C string (delimited by '\0')
- * containing the token.  Else it returns 0.
- *
- * You need to fill in this function as part of your implementation.
- */
-char *TKGetNextToken( TokenizerT * tk ) {
-  int i;
-  int start = strlen(tk->string) - tk->length;
-  //printf("start: %d\n", start);
-  char *next = (char*)malloc(start*sizeof(char));
-
-  for(i =start; i<strlen(tk->string); i++){
-
-    next[i] = tk->string[i];
-    //printf("%d %c\n", i, next[i]);
-
-    if(isalpha(tk->string[i])){
-      tk->current_state=word;
-      //printf("%u\n", tk->current_state);
-      
-      //tk->current_state = word;
-    }
-    else if(isdigit(tk->string[i])){
-      /*
-	tk->current_state=decimal;
-	printf("%u\n", tk->current_state);
-      */
-
-    }
-    else if(ispunct(tk->string[i])){
-      tk->current_state=C_operator;
-      /*
-	printf("%u\n", tk->current_state);
-      */
-
-    }
-    else if(isspace(tk->string[i])){
-      /*
-	printf("whitespace\n");
-      */
-    }
-    else{
-      /*
-	tk->current_state=error;
-	printf("%u\n", tk->current_state);
-      */
+void digit_transition(TokenizerT *tk){
+  if( (*(tk->start))=='0' ){
+    (tk->curr)++;
+    if( (*(tk->curr))!='.' && (*(tk->curr))!='x' && (*(tk->curr))!='X' && !isspace((*(tk->curr))) && !isdigit((*(tk->curr))) ){
+      tk->current_state = error;
+      (tk->curr)++;
     }
   }
-  
-  free(next);
+  else{
+    (tk->curr)++;
+    while( !isspace(*(tk->curr))){
+      //if(){}
+      (tk->curr)++;
+    }
+    if( isspace(*(tk->curr)) ){
+      (tk->curr)++;
+    }
+  }
 
-  /*
-Right now the function returns "hi" instead of the actual tokens because we don't have real tokens yet
-  */
-  return "hi";
 }
 
-
 /*
-Table-driven vs State Design Pattern?
+void float_transition(TokenizerT *tk){
+  if(isdigit(*(tk->start)) && (*(tk->start))=='0' &&((tk->start)==(tk->end))){
+    printf("Zero\n");
+
+  }
+  if((*(tk->curr))=='.' || (*(tk->curr))=='E' || (*(tk->curr))=='e' ){
+    (tk->curr)++;
+
+    while(isdigit(*(tk->curr))){
+      (tk->curr)++;
+    }
+    if( isspace(*(tk->curr)) ){
+      tk->current_state = float;
+      return 0;
+    }
+    else if(){
+
+    }
+
+  }
+}
+
+void error_transition(TokenizerT *tk){
+
+}
 */
 
-void word_transition(void){
 
-}
-void digit_transition(void){
+char *TKGetNextToken( TokenizerT * tk ) {
+  int i;
+
+  /*START TO BRANCHES (FSMs)*/
+
+  if(isdigit(*(tk->start))){
+    
+    //tk->transition = &digit_transition;   
+
+  }
+  if( isspace((*(tk->start))) ){
+
+  }
+
+  printf("state: %u\n", tk->current_state);
+ 
+  int k = (tk->curr) - (tk->string);
+  // printf("k: %d\n", k);
+  for(i =k; i<strlen(tk->string); i++){
+    if(isspace(*(tk->curr))){
+      (tk->curr)++;
+      break;
+    }
+    // printf("%d ... %c\n",i,*(tk->curr));
+    (tk->curr)++;
+    tk->end = tk->curr;
+    // printf("curr char %c\n",*(tk->curr));
+  }
+
+
+  /*
+  Have to calloc because reusing same memory so often sometimes gives us dirty memory, 
+  i.e. printouts that are wrong 
+  Doing so allows us to free the pointer, next
+  */
+  if( isspace(*(tk->curr)) ){
+    return 0;
+  }
+  char *next = (char*)calloc( ((tk->end)-(tk->start))+1, sizeof(char) );
+  //printf("malloc size next: %ld\n", (tk->end)-(tk->start));
+  strncpy(next,tk->start, (tk->end)-(tk->start));
+  //next[((tk->end)-(tk->start))+1]='\0';
+  printf("next token to return: %s\n", next);
+
+  /*switch( (tk->current_state) ){
+    case 0:
+      printf("word ");
+    break;
+    case 1:
+      printf("decimal ");
+    break;
+    case 2:
+      printf("octal ");
+    break;
+    case 3:
+      printf("hexadecimal ");
+    break;
+    case 4:
+      printf("floating point ");
+    break;
+    default:
+      printf("Idk ");
+    break;
+    }*/
+
+  printf("%s\n", next);
+  tk->start = tk->curr;
+  tk->end = tk->curr;
+  char *return_token=NULL;
+  return_token=next;
+  free(next);
+  return return_token;
   
-}
-void punct_transition(void){
-  
-}
-void whitespace_transition(void){
-  
+  //return next;
 }
 
-/*void function_a(void){
-  printf("pointed to function_a!\n");
-  }*/
 
 
-/*
- * main will have a string argument (in argv[1]).
- * The string argument contains the tokens.
- * Print out the tokens in the second string in left-to-right order.
- * Each token should be printed on a separate line.
- */
+
 int main(int argc, char **argv) {
 
-  /*void (*functionPtr)();
-    functionPtr = &function_a;
-    (*functionPtr)();
-  */
-
   TokenizerT *tokenizer = TKCreate(argv[1]);
-
-
-  //printf("tokenizer string: %s | strleng: %lu | state: %u\n",tokenizer->string,strlen(tokenizer->string),tokenizer->current_state);
   
-  tokenizer->length = strlen(argv[1]);
-  
-  while(tokenizer->length>0){
-    char *next_token = TKGetNextToken(tokenizer);
-    tokenizer->length = tokenizer->length - strlen(next_token);
+  while(*(tokenizer->curr)!='\0'){
+
+    if(*(tokenizer->curr)=='\0'){
+      // break;
+    }
+    TKGetNextToken(tokenizer);
   }
 
   TKDestroy(tokenizer);
@@ -190,7 +209,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-
-
-
-
