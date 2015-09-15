@@ -5,7 +5,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "tokenizer.h"
 
+/*
 enum state{
   word,
   decimal,
@@ -15,26 +17,18 @@ enum state{
   C_operator,
   error
 };
-enum entry{
-  alpha,
-  zero,
-  oneToNine,
-  symbol
-};
+
 
 struct TokenizerT_ {
   char *string;
-  enum state current_state;
-  int accept_state;
 
-  void (*transition)();
   char *start;
   char *curr;
   char *end;
 };
 
 typedef struct TokenizerT_ TokenizerT;
-
+*/
 
 TokenizerT *TKCreate( char * ts ) {
 
@@ -81,6 +75,20 @@ void TKDestroy( TokenizerT * tk ) {
 
 
 void isWord(TokenizerT * tk ){
+  //Punctuation is mal for now, deal with () [] // /**/ etc. later
+  if( isspace(*((tk->curr)+1)) ){
+    tk->current_state = word;
+    (tk->end) = (tk->curr);
+    return;
+  }
+  else if( isalnum(*((tk->curr)+1)) ){
+    (tk->curr)++;
+    isWord(tk);
+  }
+  else{
+    (tk->curr)++;
+    isMal(tk);
+  }
 
 }
 void isDecimal(TokenizerT * tk ){
@@ -105,7 +113,7 @@ void isMal(TokenizerT * tk ){
 void DestroySpace (TokenizerT * tk){    
   if(tk->accept_state==1){
     (tk->curr)++;
-    break;
+    return;
   }
   (tk->curr)++;
   (tk->end) = (tk->curr);
@@ -113,6 +121,42 @@ void DestroySpace (TokenizerT * tk){
   //(tk->curr)++;
 
 }
+
+
+
+void printToken(TokenizerT *tk, char *next){
+  switch( (tk->current_state) ){
+  case 0:
+    printf("word ");
+    break;
+  case 1:
+    printf("decimal ");
+    break;
+  case 2:
+    printf("octal ");
+    break;
+  case 3:
+    printf("hexadecimal ");
+    break;
+  case 4:
+    printf("floating point ");
+    break;
+  case 5:
+    printf("C_operator ");
+    //Find the symbol pattern and print
+    break;
+  case 6:
+    printf("error ");
+    break;    
+  default:
+    printf("Idk? ");
+    break;
+  }
+
+  printf("%s length: %lu\n", next, strlen(next));
+}
+
+
 
 //SET STATE OF TOKEN AT THE END
 
@@ -123,138 +167,110 @@ char *TKGetNextToken( TokenizerT * tk ) {
   */
 
   //skips past blank space
-  if(isspace(*(tk->start) ){
-      tk->start++;
-      tk->curr = tk->start;
-      tk->end = tk->start;
-      break;
-    }
+  //Change to destroy later to be safe
+  if( isspace(*(tk->start)) ){
+    tk->start++;
+    tk->curr = tk->start;
+    tk->end = tk->start;
+    return NULL;
+  }
     
 
-    // standard case functions here
-    if(isdigit(*(tk->start))){
-      if(*(tk->start) == '0'){
-        switch( *((tk->start) + 1) ){
-	case '.':
-	  tk->curr++;
-	  tk->end = tk-> curr;
-	  isFloat(tk);
-	  break;
-	case 'x':
-	  tk->curr++;
-	  tk->end = tk-> curr;
-	  isHexadecimal(tk);
-	  break;
-          case 'X'
-            tk->curr++;
-	  tk->end = tk-> curr;
-	  isHexadecimal(tk);
-	  break;
-	case ' ':
-	  //this num is a zero. What do we do?
-	  break;
-	default :
-	  tk->curr++;
-	  tk->end = tk-> curr;
-	  isOctal(tk);
-	  break;            
-        }
-      }
-      else{
-        tk->curr++;
-        tk->end = tk-> curr;
-        isDecimal(tk);
+  // standard case functions here
+  if(isdigit(*(tk->start))){
+    if(*(tk->start) == '0'){
+      switch( *((tk->start) + 1) ){
+      case '.':
+	tk->curr++;
+	tk->end = tk-> curr;
+	isFloat(tk);
+	break;
+      case 'x':
+	tk->curr++;
+	tk->end = tk-> curr;
+	isHexadecimal(tk);
+	break;
+      case 'X':
+	tk->curr++;
+	tk->end = tk-> curr;
+	isHexadecimal(tk);
+	break;
+      case ' ':
+	//this num is a zero. What do we do?
+	break;
+      default :
+	tk->curr++;
+	tk->end = tk-> curr;
+	isOctal(tk);
+	break;            
       }
     }
-
-    if(ispunct(*(tk->start))){
-      //COperator
-
-      //Quotes
-
-      //Comments
+    else{
+      tk->curr++;
+      tk->end = tk-> curr;
+      isDecimal(tk);
     }
+  }
 
-    if(isalpha){
-      // keywords functions here
+  if(ispunct(*(tk->start))){
+    //COperator
 
-      //Words
-    }
-    /*
+    //Quotes
+
+    //Comments
+  }
+
+  if(isalpha(*(tk->start))){
+    // keywords functions here
+
+    //Words
+    isWord(tk);
+
+
+  }
+  /*
     Have to calloc because reusing same memory so often sometimes gives us dirty memory, 
     i.e. printouts that are wrong 
     Doing so allows us to free the pointer, next
-    */
+  */
 
-    //create copy of string
-    char *next = (char*)calloc( ((tk->end)-(tk->start))+1, sizeof(char) );
-    strncpy(next,tk->start, (tk->end)-(tk->start));
+  //create copy of string
+  char *next = (char*)calloc( ((tk->end)-(tk->start))+1, sizeof(char) );
+  strncpy(next,tk->start, (tk->end)-(tk->start));
 
-    //print string
+  //print string
 
-    printToken( tk, next);
+  printToken( tk, next);
 
-    //resets the string
-    tk->start = tk->curr;
-    tk->end = tk->curr;
+  //resets the string
+  tk->start = tk->curr;
+  tk->end = tk->curr;
 
-    //creates a copy of the token to return and frees the copy
-    char *return_token = NULL;
-    return_token = next;
-    free(next);
-
-
-    return return_token;
-    }
+  //creates a copy of the token to return and frees the copy
+  char *return_token = NULL;
+  return_token = next;
+  free(next);
 
 
-  void printToken(TokenizerT *tk, char *next){
-    switch( (tk->current_state) ){
-    case 0:
-      printf("word ");
-      break;
-    case 1:
-      printf("decimal ");
-      break;
-    case 2:
-      printf("octal ");
-      break;
-    case 3:
-      printf("hexadecimal ");
-      break;
-    case 4:
-      printf("floating point ");
-      break;
-    case 5:
-      printf("C_operator ");
-      //Find the symbol pattern and print
-      break;
-    case 6:
-      printf("error ");
-      break;    
-    default:
-      printf("Idk? ");
-      break;
-    }
-
-    printf("%s length: %lu\n", next, strlen(next));
-  }
+  return return_token;
+}
 
 
-  int main(int argc, char **argv) {
 
-    TokenizerT *tokenizer = TKCreate(argv[1]);
+int main(int argc, char **argv) {
+
+  TokenizerT *tokenizer = TKCreate(argv[1]);
   
-    while(*(tokenizer->curr)!='\0'){
+  while(*(tokenizer->curr)!='\0'){
 
-      if(*(tokenizer->curr)=='\0'){
-	// break;
-      }
-      TKGetNextToken(tokenizer);
+    if(*(tokenizer->curr)=='\0'){
+      // break;
     }
-
-    TKDestroy(tokenizer);
-
-
-    return 0;
+    TKGetNextToken(tokenizer);
   }
+
+  TKDestroy(tokenizer);
+
+
+  return 0;
+}
