@@ -76,9 +76,10 @@ void TKDestroy( TokenizerT * tk ) {
 
 void isWord(TokenizerT * tk ){
   //Punctuation is mal for now, deal with () [] // /**/ etc. later
-  if( isspace(*((tk->curr)+1)) ){
+  if( isspace(*((tk->curr)+1)) || *((tk->curr)+1) =='\0' ){
     tk->current_state = word;
     (tk->end) = (tk->curr);
+    tk->curr++;
     return;
   }
   else if( isalnum(*((tk->curr)+1)) ){
@@ -94,8 +95,38 @@ void isWord(TokenizerT * tk ){
 void isDecimal(TokenizerT * tk ){
   // i need to check if i transition to float due to next char
 
+
+  
+
 }
 void isOctal(TokenizerT * tk ){
+  //Punctuation is mal for now, deal with () [] // /**/ etc. later
+  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
+    tk->current_state = octal;
+    (tk->end) = (tk->curr);
+    tk->curr++;
+    return;
+  }
+  else if( isdigit( *((tk->curr)+1) )){
+    // printf("curr: %c\n",*(tk->curr) );
+    switch( *((tk->curr)+1) ){
+    case '8':
+      isMal(tk);
+      break;
+    case '9':
+      isMal(tk);
+      break;
+    default:
+      (tk->curr)++;
+      isOctal(tk);
+      break;
+      
+    }
+  }
+  else{
+    (tk->curr)++;
+    isMal(tk);
+  }
 
 }
 void isHexadecimal(TokenizerT * tk ){
@@ -108,8 +139,20 @@ void isCToken(TokenizerT * tk ){
 
 }
 void isMal(TokenizerT * tk ){
+  // print error statement
+
+  while( !isspace( *((tk->curr)+1) ) && *((tk->curr)+1) !='\0'){
+    //printf("error\n");
+    tk->curr++;
+  }
+  tk->curr++;
+  tk->start = tk->curr;
+  tk->end = tk->curr;
+  tk->current_state = error;
+  return;
 
 }
+
 void DestroySpace (TokenizerT * tk){    
   if(tk->accept_state==1){
     (tk->curr)++;
@@ -198,9 +241,8 @@ char *TKGetNextToken( TokenizerT * tk ) {
       case ' ':
 	//this num is a zero. What do we do?
 	break;
+	// default case when you hit a zero is octal
       default :
-	tk->curr++;
-	tk->end = tk-> curr;
 	isOctal(tk);
 	break;            
       }
@@ -234,9 +276,18 @@ char *TKGetNextToken( TokenizerT * tk ) {
     Doing so allows us to free the pointer, next
   */
 
+  //prevent an error to get memory allocation and get returned as a token
+  if(tk->current_state==6){
+    //print temporary message
+    printf("invalid token\n");
+    return NULL;
+  }
+
   //create copy of string
   char *next = (char*)calloc( ((tk->end)-(tk->start))+1, sizeof(char) );
-  strncpy(next,tk->start, (tk->end)-(tk->start));
+
+  strncpy(next,tk->start, ((tk->end)-(tk->start)+1));
+  //printf("%lu\n", strlen(next));
 
   //print string
 
