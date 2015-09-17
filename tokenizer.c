@@ -247,125 +247,191 @@ void isFloatE(TokenizerT * tk ){
   }    
 }
 
+//recursively checks if the token is a valid c token
 void isCToken(TokenizerT * tk ){
   //use recursive advantage to add +/- to valid float token in CToken function
   //+/- float only applies if white space is in front; otherwise we just take the +/- and discard the rest of token
   //
 
   //if( *(tk->curr) ==33 ||  *(tk->curr) ==58 || ( *(tk->curr)>=37&&*(tk->curr)<=47 ) || ( *(tk->curr)>=60&&*(tk->curr)<=63 ) || ( *(tk->curr)>=91&&*(tk->curr)<=94 ) || ( *(tk->curr)>=123&&*(tk->curr)<=126 )  ){
-      switch( *(tk->curr) ){
-      case '-':
-	if( ((*(tk->curr)+1))=='>' ){
-	  tk->current_state = structuremember;
-	  tk->curr+=2;
-	  tk->end = tk->curr-1;
-	}
-	else if( (*((tk->curr)+1)) == '-' ){
-	  tk->current_state = dec;
-	  tk->curr+=2;
-	  tk->end = tk->curr-1;
-	}
-	else if( (*((tk->curr)+1))== '=' ){
-	  tk->current_state = minusequals;
-	  tk->curr+=2;
-	  tk->end = tk->curr-1;
-	}
-	else{
-	  tk->current_state = minus;
-	  tk->curr++;
-	}
-	break;
-      case '+':
-	//plus equals
-	//++
-	tk->current_state = add;
-	tk->curr++;
-	break;
-      case '=':
-	//equals equals
-	tk->current_state = assignmentoperator;
-	tk->curr++;
-	break;
-      case '*':
-	//times equals
-	tk->current_state = multiply;
-	tk->curr++;
-	break;
-      case '%':
-	//modulo equals
-	tk->current_state = modulo;
-	tk->curr++;
-	break;
-      case '>':
-	//>=
-	//>>=
-	//>>
-	tk->current_state = greaterthan;
-	tk->curr++;
-	break;
-      case '<':
-	//<=
-	//<<
-	//<<=
-	tk->current_state = lessthan;
-	tk->curr++;
-	break;
-      case '/':
-	if(*((tk->curr)+1) == '='){
-	  tk->current_state = divideequals;
-	  tk->curr+=2;
-	  tk->end = tk->curr-1;
-	  }
-	else{
-	  tk->current_state=divide;
-	  tk->curr++;
-	} 
-	break;
-      case '(':
-	break;
-      case ')':
-	break;
-      case '.':
-	break;
-      case '&':
+  
+  switch( *(tk->curr) ){
+    case '-':
+	    if( ((*(tk->curr)+1))=='>' ){
+	      tk->current_state = structuremember;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else if( (*((tk->curr)+1)) == '-' ){
+	      tk->current_state = dec;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else if( (*((tk->curr)+1))== '=' ){
+	      tk->current_state = minusequals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else{
+	      tk->current_state = minus;
+	      tk->curr++;
+	    }
+  	  break;
+    case '+':
+	    if( ((*(tk->curr)+1))=='=' ){
+	      tk->current_state = plusequals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+      else if( ((*(tk->curr)+1))=='+' ){
+	      tk->current_state = inc;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+      else{
+	      tk->current_state = add;
+	      tk->curr++;
+      }
+	    break;
+    case '=':
+	    if( ((*(tk->curr)+1))=='=' ){
+	      tk->current_state = equals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+      else{
+	      tk->current_state = assignmentoperator;
+	      tk->curr++;
+      }
+	   break;
+    case '*':
+    if( ((*(tk->curr)+1))=='=' ){
+	      tk->current_state = timesequal;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+    else{
+    	tk->current_state = multiply;
+    	tk->curr++;
+  	  break;
+    case '%':
+	    if( ((*(tk->curr)+1))=='=' ){
+	      tk->current_state = moduloequals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+      else{
+	      tk->current_state = modulo;
+	      tk->curr++;
+      }
+	    break;
+    case '>':
+	    if( ((*(tk->curr)+1))=='=' ){
+	      tk->current_state = greaterorequal;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+      else if( ((*(tk->curr)+1))=='>' ){
+	      if( ((*(tk->curr)+2))=='=' ){
+	        tk->current_state = shiftrightequals;
+	        tk->curr+=3;
+	        tk->end = tk->curr-1;
+	      }
+        else{
+	        tk->current_state = shiftright;
+	        tk->curr+=2;
+	        tk->end = tk->curr-1;
+	      }
+      }
+      else{
+        tk->current_state = greaterthan;
+        tk->curr++;
+      }
+	    break;
+    case '<':
+	    if( ((*(tk->curr)+1))=='=' ){
+	      tk->current_state = lessorequal;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+      else if( ((*(tk->curr)+1))=='<' ){
+	      if( ((*(tk->curr)+2))=='=' ){
+	        tk->current_state = shiftleftequals;
+	        tk->curr+=3;
+	        tk->end = tk->curr-1;
+	      }
+        else{
+	        tk->current_state = shiftleft;
+	        tk->curr+=2;
+	        tk->end = tk->curr-1;
+	      }
+      }
+      else{
+	      tk->current_state = lessthan;
+	      tk->curr++;
+      }
+	    break;
+    case '/':
+	    if(*((tk->curr)+1) == '='){
+	      tk->current_state = divideequals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else{
+	      tk->current_state = divide;
+	      tk->curr++;
+	    } 
+  	  break;
+    case '(':
+	    tk->current_state = leftbrace;
+	    tk->curr++;
+	    break;
+    case ')':
+	    tk->current_state = rightbrace;
+	    tk->curr++;
+    	break;
+    case '.':
+	    tk->current_state = divide;
+	    tk->curr++;
+    	break;
+    case '&':
 	//&=
 	//&&
-	break;
-      case '!':
+	    break;
+    case '!':
 	//!=
-	break;
-      case '~':
-	break;
-      case '^':
+    	break;
+    case '~':
+    	break;
+    case '^':
 	//^=
-	break;
-      case '[':
-	break;
-      case ']':
-	break;
-      case '?':
-	break;
-      case ':':
-	break;
-      case ',':
-	break;
-      case '|':
+	    break;
+    case '[':
+	    tk->current_state = leftbracket;
+	    tk->curr++;
+    	break;
+    case ']':
+	    tk->current_state = rightbracket;
+	    tk->curr++;
+	    break;
+    case '?':
+	    break;
+    case ':':
+	    break;
+    case ',':
+	    tk->current_state = comma;
+	    tk->curr++;
+	    break;
+    case '|':
 	// ||
-	break;
-      //deal with sizeof in words
-
-      default:
-	(tk->curr)++;
-	isCToken(tk);
-	break;
-      }
-  // }
-
-      // }
-     /* else{
-    (tk->curr)++;
-    isMal(tk);
-    }*/
+    	break;
+    //deal with sizeof in words
+    //TODO see if this is a proper default case
+    default:
+	    tk->curr++;
+	    isCToken(tk);
+    	break;
+    }
   return;
 }
 
