@@ -58,21 +58,20 @@ void TKDestroy( TokenizerT * tk ) {
   free(tk);
 }
 
-//C-OPs
-/*if( ( *(tk->start)>=33 && *(tk->start)<=47 )||( *(tk->start)>=58 && *(tk->start)<=64 )||( *(tk->start)>=91 && *(tk->start)<=97 )||( *(tk->start)>=123 && *(tk->start)<=126 ) ){
-           
-  if( (*((tk->start)+1) >=33 && *((tk->start)+1)<=47)||(*((tk->start)+1) >=58 && *((tk->start)+1)<=64)||(*((tk->start)+1) >=91 && *((tk->start)+1)<=97)||(*((tk->start)+1) >=123 && *((tk->start)+1)<=126) ) {
-   //Doesn't handle malformed c_op tokens that are more than 2 characters  
-  tk->current_state=C_operator;
+void isMal(TokenizerT * tk ){
+  // Need to deal with incomplete hex and float tokens
+  // print error statement
+  //printf("%c\n", *(tk->curr));
+  while( !isspace( *((tk->curr)+1) ) && *((tk->curr)+1) !='\0'){
+    tk->curr++;
   }
-  else{
-   printf("error\n");
-   tk->current_state=error;
-     
-  }
-            
-  }*/
+  tk->current_state = error;
+  tk->curr++;
+  tk->start = tk->curr;
+  tk->end = tk->curr;
+  return;
 
+}
 
 void isWord(TokenizerT * tk ){
   //Punctuation is mal for now, deal with () [] // /**/ etc. later
@@ -94,8 +93,29 @@ void isWord(TokenizerT * tk ){
 }
 void isDecimal(TokenizerT * tk ){
   // i need to check if i transition to float due to next char
-
-
+  //Punctuation is mal for now, deal with () [] // /**/ etc. later
+  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
+    tk->current_state = decimal;
+    (tk->end) = (tk->curr);
+    tk->curr++;
+    return;
+  }
+  else if( isdigit( *((tk->curr)+1) )){
+    tk->curr++;
+    isDecimal(tk);
+  }
+  else if( *((tk->curr)+1) == '.' ){
+    tk->curr++;
+    isFloat(tk);
+  }
+  else if( *((tk->curr)+1) == 'E' || *((tk->curr)+1) == 'e' ){
+    tk->curr++;
+    isFloatE(tk);
+  }
+  else{
+    (tk->curr)++;
+    isMal(tk);
+  }
   
 
 }
@@ -108,7 +128,6 @@ void isOctal(TokenizerT * tk ){
     return;
   }
   else if( isdigit( *((tk->curr)+1) )){
-    // printf("curr: %c\n",*(tk->curr) );
     switch( *((tk->curr)+1) ){
     case '8':
       isMal(tk);
@@ -119,39 +138,218 @@ void isOctal(TokenizerT * tk ){
     default:
       (tk->curr)++;
       isOctal(tk);
-      break;
-      
+      break;     
     }
   }
   else{
     (tk->curr)++;
     isMal(tk);
   }
-
 }
+
 void isHexadecimal(TokenizerT * tk ){
-
-}
-void isFloat(TokenizerT * tk ){
-
-}
-void isCToken(TokenizerT * tk ){
-
-}
-void isMal(TokenizerT * tk ){
-  // print error statement
-
-  while( !isspace( *((tk->curr)+1) ) && *((tk->curr)+1) !='\0'){
-    //printf("error\n");
+  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
+    if( *(tk->curr)=='x' || *(tk->curr)=='X' ){
+      isMal(tk);
+      return;
+    }
+    tk->current_state = hexadecimal;
+    (tk->end) = (tk->curr);
     tk->curr++;
+    return;
   }
-  tk->curr++;
-  tk->start = tk->curr;
-  tk->end = tk->curr;
-  tk->current_state = error;
-  return;
-
+  else if( isxdigit( *((tk->curr)+1) )){
+    tk->curr++;
+    isHexadecimal(tk);   
+  }
+  else{
+    (tk->curr)++;
+    isMal(tk);
+  }  
 }
+
+void isFloat(TokenizerT * tk ){
+  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
+    if( *(tk->curr)=='.' ){
+      isMal(tk);
+      return;
+    }
+    tk->current_state = floating_point;
+    (tk->end) = (tk->curr);
+    tk->curr++;
+    return;
+  }
+  else if( isdigit( *((tk->curr)+1) )){
+    tk->curr++;
+    isFloat(tk);
+  }
+  else if( *((tk->curr)+1) == 'e' || *((tk->curr)+1) =='E' ){
+    tk->curr++;
+    isFloatE(tk);
+  }
+  else{
+    (tk->curr)++;
+    isMal(tk);
+  }  
+}
+
+void isFloatE(TokenizerT * tk ){
+  
+  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
+    if( *(tk->curr)=='e' ||  *(tk->curr)=='E' || *(tk->curr) == '+' || *(tk->curr) == '-' ){
+      isMal(tk);
+      return;
+    }
+    tk->current_state = floating_point;
+    (tk->end) = (tk->curr);
+    tk->curr++;
+    return;
+  }
+  else if( isdigit( *((tk->curr)+1) )){
+    tk->curr++;
+    isFloatE(tk);
+  }
+  else if( *((tk->curr)+1) == '+' || *((tk->curr)+1) == '-' ){
+    if( *(tk->curr) == 'e' || *(tk->curr) == 'E' ){
+      tk->curr++;
+      isFloatE(tk);
+    }
+    else{
+      (tk->curr)++;
+      isMal(tk);
+      //return;
+    }
+  }
+  else{
+    printf("here \n");
+    (tk->curr)++;
+    isMal(tk);
+  }    
+}
+
+void isCToken(TokenizerT * tk ){
+  //use recursive advantage to add +/- to valid float token in CToken function
+  //+/- float only applies if white space is in front; otherwise we just take the +/- and discard the rest of token
+  //
+
+  //if( *(tk->curr) ==33 ||  *(tk->curr) ==58 || ( *(tk->curr)>=37&&*(tk->curr)<=47 ) || ( *(tk->curr)>=60&&*(tk->curr)<=63 ) || ( *(tk->curr)>=91&&*(tk->curr)<=94 ) || ( *(tk->curr)>=123&&*(tk->curr)<=126 )  ){
+      switch( *(tk->curr) ){
+      case '-':
+	if( ((*(tk->curr)+1))=='>' ){
+	  tk->current_state = structuremember;
+	  tk->curr+=2;
+	  tk->end = tk->curr-1;
+	}
+	else if( (*((tk->curr)+1)) == '-' ){
+	  tk->current_state = dec;
+	  tk->curr+=2;
+	  tk->end = tk->curr-1;
+	}
+	else if( (*((tk->curr)+1))== '=' ){
+	  tk->current_state = minusequals;
+	  tk->curr+=2;
+	  tk->end = tk->curr-1;
+	}
+	else{
+	  tk->current_state = minus;
+	  tk->curr++;
+	}
+	break;
+      case '+':
+	//plus equals
+	//++
+	tk->current_state = add;
+	tk->curr++;
+	break;
+      case '=':
+	//equals equals
+	tk->current_state = assignmentoperator;
+	tk->curr++;
+	break;
+      case '*':
+	//times equals
+	tk->current_state = multiply;
+	tk->curr++;
+	break;
+      case '%':
+	//modulo equals
+	tk->current_state = modulo;
+	tk->curr++;
+	break;
+      case '>':
+	//>=
+	//>>=
+	//>>
+	tk->current_state = greaterthan;
+	tk->curr++;
+	break;
+      case '<':
+	//<=
+	//<<
+	//<<=
+	tk->current_state = lessthan;
+	tk->curr++;
+	break;
+      case '/':
+	if(*((tk->curr)+1) == '='){
+	  tk->current_state = divideequals;
+	  tk->curr+=2;
+	  tk->end = tk->curr-1;
+	  }
+	else{
+	  tk->current_state=divide;
+	  tk->curr++;
+	} 
+	break;
+      case '(':
+	break;
+      case ')':
+	break;
+      case '.':
+	break;
+      case '&':
+	//&=
+	//&&
+	break;
+      case '!':
+	//!=
+	break;
+      case '~':
+	break;
+      case '^':
+	//^=
+	break;
+      case '[':
+	break;
+      case ']':
+	break;
+      case '?':
+	break;
+      case ':':
+	break;
+      case ',':
+	break;
+      case '|':
+	// ||
+	break;
+      //deal with sizeof in words
+
+      default:
+	(tk->curr)++;
+	isCToken(tk);
+	break;
+      }
+  // }
+
+      // }
+     /* else{
+    (tk->curr)++;
+    isMal(tk);
+    }*/
+  return;
+}
+
+//actually use this instead of returning null
 
 void DestroySpace (TokenizerT * tk){    
   if(tk->accept_state==1){
@@ -170,33 +368,164 @@ void DestroySpace (TokenizerT * tk){
 void printToken(TokenizerT *tk, char *next){
   switch( (tk->current_state) ){
   case 0:
-    printf("word ");
-    break;
+    printf("zero");
   case 1:
-    printf("decimal ");
+    printf("word");
     break;
   case 2:
-    printf("octal ");
+    printf("decimal");
     break;
   case 3:
-    printf("hexadecimal ");
+    printf("octal");
     break;
   case 4:
-    printf("floating point ");
+    printf("hexadecimal");
     break;
   case 5:
-    printf("C_operator ");
-    //Find the symbol pattern and print
+    printf("float");
     break;
   case 6:
-    printf("error ");
-    break;    
+    printf("error");
+    //Find the symbol pattern and print
+    break;
+  case 7:
+    printf("leftbrace");
+    break;
+  case 8:
+    printf("rightbrace");
+    break;
+  case 9:
+    printf("leftbracket");
+    break;
+  case 10:
+    printf("rightbracket");
+    break;
+  case 11:
+    printf("structuremember");
+    break;
+  case 12:
+    printf("structurepointer");
+    break;
+  case 13:
+    printf("multiply");
+    break;
+  case 14:
+    printf("bitwiseand");
+    break;
+  case 15:
+    printf("minus");
+    break;
+  case 16:
+    printf("negate");
+    break;
+  case 17:
+    printf("onescomplement");
+    break;
+  case 18:
+    printf("inc");
+    break;
+  case 19:
+    printf("dec");
+    break;
+  case 20:
+    printf("cast");
+    break;
+  case 21:
+    printf("divide");
+    break;
+  case 22:
+    printf("modulo");
+    break;
+  case 23:
+    printf("add");
+    break;
+  case 24:
+    printf("subtract");
+    break;
+  case 25:
+    printf("shiftright");
+    break;
+  case 26:
+    printf("shiftleft");
+    break;
+  case 27:
+    printf("less than");
+    break;
+  case 28:
+    printf("greater than");
+    break;
+  case 29:
+    printf("less or equal");
+    break;
+  case 30:
+    printf("greater or equal");
+    break;
+  case 31:
+    printf("equals");
+    break;
+  case 32:
+    printf("not equals");
+    break;
+  case 33:
+    printf("bitwise exclusive or");
+    break;
+  case 34:
+    printf("bitwise or");
+    break;
+  case 35:
+    printf("logical and");
+    break;
+  case 36:
+    printf("logical or");
+    break;
+  case 37:
+    printf("true operator");
+    break;
+  case 38:
+    printf("false operator");
+    break;
+  case 39:
+    printf("assignment operator");
+    break;
+  case 40:
+    printf("plus equals");
+    break;
+  case 41:
+    printf("minus equals");
+    break;
+  case 42:
+    printf("multiply equals");
+    break;
+  case 43:
+    printf("divide equals");
+    break;
+  case 44:
+    printf("modulo equals");
+    break;
+  case 45:
+    printf("shift right equals");
+    break;
+  case 46:
+    printf("shift left equals");
+    break;
+  case 47:
+    printf("bitwise and equals");
+    break;
+  case 48:
+    printf("bitwise exclusive or equals");
+    break;
+  case 49:
+    printf("bitwise or equals");
+    break;
+  case 50:
+    printf("comma");
+    break;
   default:
-    printf("Idk? ");
+    printf("Unknown State");
     break;
   }
 
-  printf("%s length: %lu\n", next, strlen(next));
+  printf(" %s\n", next);
 }
 
 
@@ -204,10 +533,6 @@ void printToken(TokenizerT *tk, char *next){
 //SET STATE OF TOKEN AT THE END
 
 char *TKGetNextToken( TokenizerT * tk ) {
-  /* debug
-  int ascii = (*(tk->curr));
-  printf("%c %d\n", (*(tk->curr)), ascii);
-  */
 
   //skips past blank space
   //Change to destroy later to be safe
@@ -220,55 +545,59 @@ char *TKGetNextToken( TokenizerT * tk ) {
     
 
   // standard case functions here
-  if(isdigit(*(tk->start))){
-    if(*(tk->start) == '0'){
-      switch( *((tk->start) + 1) ){
-      case '.':
+  if(isdigit(*(tk->curr))){
+    if(*(tk->curr) == '0'){
+      //check if space or end of string (zero)
+      if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
+	tk->current_state = zero;
 	tk->curr++;
-	tk->end = tk-> curr;
-	isFloat(tk);
-	break;
-      case 'x':
-	tk->curr++;
-	tk->end = tk-> curr;
-	isHexadecimal(tk);
-	break;
-      case 'X':
-	tk->curr++;
-	tk->end = tk-> curr;
-	isHexadecimal(tk);
-	break;
-      case ' ':
-	//this num is a zero. What do we do?
-	break;
-	// default case when you hit a zero is octal
-      default :
-	isOctal(tk);
-	break;            
+      } 
+      else{
+	switch( *((tk->curr) + 1) ){
+	case '.':
+	  tk->curr++;
+	  isFloat(tk);
+	  break;
+	case 'x':
+	  tk->curr++;
+	  isHexadecimal(tk);
+	  break;
+	case 'X':
+	  tk->curr++;
+	  isHexadecimal(tk);
+	  break;
+	case ' ':
+	  //this num is a zero. What do we do?
+	  break;
+	  // default case when you hit a zero is octal
+	default :
+	  isOctal(tk);
+	  break;            
+	}
       }
     }
     else{
-      tk->curr++;
-      tk->end = tk-> curr;
       isDecimal(tk);
     }
   }
 
-  if(ispunct(*(tk->start))){
+  else if(ispunct(*(tk->start))){
     //COperator
+    isCToken(tk);
 
     //Quotes
 
     //Comments
   }
 
-  if(isalpha(*(tk->start))){
+  else if(isalpha(*(tk->start))){
     // keywords functions here
 
     //Words
     isWord(tk);
-
-
+  }
+  else{
+    printf("something is very wrong\n");
   }
   /*
     Have to calloc because reusing same memory so often sometimes gives us dirty memory, 
@@ -277,7 +606,7 @@ char *TKGetNextToken( TokenizerT * tk ) {
   */
 
   //prevent an error to get memory allocation and get returned as a token
-  if(tk->current_state==6){
+  if(tk->current_state==7){
     //print temporary message
     printf("invalid token\n");
     return NULL;
@@ -287,10 +616,8 @@ char *TKGetNextToken( TokenizerT * tk ) {
   char *next = (char*)calloc( ((tk->end)-(tk->start))+1, sizeof(char) );
 
   strncpy(next,tk->start, ((tk->end)-(tk->start)+1));
-  //printf("%lu\n", strlen(next));
 
   //print string
-
   printToken( tk, next);
 
   //resets the string
