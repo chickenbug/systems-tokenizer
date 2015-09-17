@@ -58,10 +58,24 @@ void TKDestroy( TokenizerT * tk ) {
   free(tk);
 }
 
+
+//For incomplete tokens like 0x,  3e, and 1e+ 
+void isIncomplete(TokenizerT *tk){
+  tk->current_state = error;
+  tk->curr++;
+  tk->start = tk->curr;
+  tk->end = tk->curr;
+  printf("Token incorrectly formated, insufficient information\n");
+  return;
+}
+
+//handles  malformed tokens. 
+//Prints the hex of the bad char and skips to the end of the token
 void isMal(TokenizerT * tk ){
-  // Need to deal with incomplete hex and float tokens
   // print error statement
   //printf("%c\n", *(tk->curr));
+
+  //advance the pointers past the malformed token and set error state
   while( !isspace( *((tk->curr)+1) ) && *((tk->curr)+1) !='\0'){
     tk->curr++;
   }
@@ -73,6 +87,7 @@ void isMal(TokenizerT * tk ){
 
 }
 
+//Recursively checks if the token is a word
 void isWord(TokenizerT * tk ){
   //Punctuation is mal for now, deal with () [] // /**/ etc. later
   if( isspace(*((tk->curr)+1)) || *((tk->curr)+1) =='\0' ){
@@ -89,8 +104,9 @@ void isWord(TokenizerT * tk ){
     (tk->curr)++;
     isMal(tk);
   }
-
 }
+
+//Recursively checks if token is a Decimal, passing to isFloat or isFloatE is as necessary 
 void isDecimal(TokenizerT * tk ){
   // i need to check if i transition to float due to next char
   //Punctuation is mal for now, deal with () [] // /**/ etc. later
@@ -119,6 +135,8 @@ void isDecimal(TokenizerT * tk ){
   
 
 }
+
+//Recursively checks if the token is an Octal
 void isOctal(TokenizerT * tk ){
   //Punctuation is mal for now, deal with () [] // /**/ etc. later
   if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
@@ -147,10 +165,11 @@ void isOctal(TokenizerT * tk ){
   }
 }
 
+//Recursively checks if the token follows hexadecimal format.
 void isHexadecimal(TokenizerT * tk ){
   if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
     if( *(tk->curr)=='x' || *(tk->curr)=='X' ){
-      isMal(tk);
+      isIncomplete(tk);
       return;
     }
     tk->current_state = hexadecimal;
@@ -168,10 +187,11 @@ void isHexadecimal(TokenizerT * tk ){
   }  
 }
 
+//Recursively checks if token is in float format with no eE, passing to isFloatE as neccessary
 void isFloat(TokenizerT * tk ){
   if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
     if( *(tk->curr)=='.' ){
-      isMal(tk);
+      isIncomplete(tk);
       return;
     }
     tk->current_state = floating_point;
@@ -193,11 +213,11 @@ void isFloat(TokenizerT * tk ){
   }  
 }
 
-void isFloatE(TokenizerT * tk ){
-  
+//recursively checks if token is in valid format with an eE
+void isFloatE(TokenizerT * tk ){  
   if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
     if( *(tk->curr)=='e' ||  *(tk->curr)=='E' || *(tk->curr) == '+' || *(tk->curr) == '-' ){
-      isMal(tk);
+      isIncomplete(tk);
       return;
     }
     tk->current_state = floating_point;
