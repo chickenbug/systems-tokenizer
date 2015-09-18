@@ -247,7 +247,7 @@ void isFloatE(TokenizerT * tk ){
   }    
 }
 
-//recursively checks if the token is a valid c token
+//checks if the token is a valid c token. Sizeof is checked in the keyword function
 void isCToken(TokenizerT * tk ){
   //use recursive advantage to add +/- to valid float token in CToken function
   //+/- float only applies if white space is in front; otherwise we just take the +/- and discard the rest of token
@@ -395,16 +395,46 @@ void isCToken(TokenizerT * tk ){
 	    tk->curr++;
     	break;
     case '&':
-	//&=
-	//&&
+	    if(*((tk->curr)+1) == '='){
+	      tk->current_state = bitwiseandequals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+      else if(*((tk->curr)+1) == '&'){
+	      tk->current_state = logicaland;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else{
+	      tk->current_state = bitwiseand;
+	      tk->curr++;
+	    } 
 	    break;
     case '!':
-	//!=
+      else if(*((tk->curr)+1) == '='){
+	      tk->current_state = notequals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else{
+	      tk->current_state = negate;
+	      tk->curr++;
+	    } 
     	break;
     case '~':
+	    tk->current_state = onescomplement;
+	    tk->curr++;
     	break;
     case '^':
-	//^=
+      else if(*((tk->curr)+1) == '='){
+	      tk->current_state = bitwiseexclusiveorequals;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else{
+	      tk->current_state = bitwiseexclusiveor;
+	      tk->curr++;
+	    } 
 	    break;
     case '[':
 	    tk->current_state = leftbracket;
@@ -415,41 +445,115 @@ void isCToken(TokenizerT * tk ){
 	    tk->curr++;
 	    break;
     case '?':
+	    tk->current_state = trueop;
+	    tk->curr++;
 	    break;
     case ':':
+	    tk->current_state = falseop;
+	    tk->curr++;
 	    break;
     case ',':
 	    tk->current_state = comma;
 	    tk->curr++;
 	    break;
     case '|':
-	// ||
+      else if(*((tk->curr)+1) == '|'){
+	      tk->current_state = logicalor;
+	      tk->curr+=2;
+	      tk->end = tk->curr-1;
+	    }
+	    else{
+	      tk->current_state = bitwiseor;
+	      tk->curr++;
+	    } 
     	break;
-    //deal with sizeof in words
-    //TODO see if this is a proper default case
     default:
-	    tk->curr++;
-	    isCToken(tk);
+	    isMal(tk);
     	break;
     }
   return;
 }
 
-//actually use this instead of returning null
+void isKeyword(TokenizerT *tk){
 
-void DestroySpace (TokenizerT * tk){    
-  if(tk->accept_state==1){
-    (tk->curr)++;
-    return;
+  const char *keyword_list[32] = {
+    "auto ",
+    "break ",
+    "case ",
+    "char ", 
+    "const ", 
+    "continue ", 
+    "default ", 
+    "do ", 
+    "double ",
+    "else ",
+    "enum ",
+    "extern ",
+    "float ",
+    "for ",
+    "goto ",
+    "if ",
+    "int ",
+    "long ",
+    "register ",
+    "return ",
+    "short ",
+    "signed ",
+    "sizeof ",
+    "static ",
+    "struct ",
+    "switch ",
+    "typedef ",
+    "union ",
+    "unsigned ",
+    "void ",
+    "volitle ",
+    "while "
+  };
+  
+  const int *keyword_list[32] = {
+    "auto ",
+    "break ",
+    "case ",
+    "char ", 
+    "const ", 
+    "continue ", 
+    "default ", 
+    "do ", 
+    "double ",
+    "else ",
+    "enum ",
+    "extern ",
+    "float ",
+    "for ",
+    "goto ",
+    "if ",
+    "int ",
+    "long ",
+    "register ",
+    "return ",
+    "short ",
+    "signed ",
+    "sizeof ",
+    "static ",
+    "struct ",
+    "switch ",
+    "typedef ",
+    "union ",
+    "unsigned ",
+    "void ",
+    "volitle ",
+    "while "
+  };
+
+  int i, string_len;
+  for(i = 0, i < 32, i++){
+    string_len = strlen( keyword_list[i] );
+    if( strncmp(tk->curr, keyword_list[i], string_len){
+      
+    }
   }
-  (tk->curr)++;
-  (tk->end) = (tk->curr);
-  (tk->start) = (tk->curr);
-  //(tk->curr)++;
-
 }
-
-
 
 void printToken(TokenizerT *tk, char *next){
   switch( (tk->current_state) ){
@@ -471,9 +575,9 @@ void printToken(TokenizerT *tk, char *next){
     printf("float");
     break;
   case 6:
-    printf("error");
-    //Find the symbol pattern and print
+    printf("Malformed Token, Moving to Next");
     break;
+  //CTokens
   case 7:
     printf("leftbrace");
     break;
@@ -606,6 +710,106 @@ void printToken(TokenizerT *tk, char *next){
   case 50:
     printf("comma");
     break;
+
+  // keywords
+  case 51:
+    printf("bitwise or equals");
+    break;
+  case 52:
+    printf("comma");
+    break;
+  case 53:
+    printf("bitwise or equals");
+    break;
+  case 54:
+    printf("comma");
+    break;
+  case 55:
+    printf("bitwise or equals");
+    break;
+  case 56:
+    printf("comma");
+    break;
+  case 57:
+    printf("bitwise or equals");
+    break;
+  case 58:
+    printf("comma");
+    break;
+  case 59:
+    printf("bitwise or equals");
+    break;
+  case 60:
+    printf("comma");
+    break;
+  case 61:
+    printf("bitwise or equals");
+    break;
+  case 63:
+    printf("comma");
+    break;
+  case 64:
+    printf("bitwise or equals");
+    break;
+  case 65:
+    printf("comma");
+    break;
+  case 66:
+    printf("bitwise or equals");
+    break;
+  case 67:
+    printf("comma");
+    break;
+  case 68:
+    printf("bitwise or equals");
+    break;
+  case 69:
+    printf("comma");
+    break;
+  case 70:
+    printf("bitwise or equals");
+    break;
+  case 71:
+    printf("comma");
+    break;
+  case 72:
+    printf("bitwise or equals");
+    break;
+  case 73:
+    printf("comma");
+    break;
+  case 74:
+    printf("bitwise or equals");
+    break;
+  case 75:
+    printf("comma");
+    break;
+  case 76:
+    printf("bitwise or equals");
+    break;
+  case 77:
+    printf("comma");
+    break;
+  case 78:
+    printf("bitwise or equals");
+    break;
+  case 79:
+    printf("comma");
+    break;
+  case 80:
+    printf("bitwise or equals");
+    break;
+  case 81:
+    printf("comma");
+    break;
+  case 82:
+    printf("bitwise or equals");
+    break;
+  case 83:
+    printf("comma");
+    break;
+
+  //quotes and comments
   default:
     printf("Unknown State");
     break;

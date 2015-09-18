@@ -52,7 +52,7 @@ enum state{
   bitwiseandequals,
   bitwiseexclusiveorequals,
   bitwiseorequals,
- comma
+  comma
 
 };
 
@@ -80,8 +80,8 @@ void isHexadecimal(TokenizerT * tk );
 void isFloat(TokenizerT * tk );
 void isFloatE(TokenizerT * tk );
 void isCToken(TokenizerT * tk );
+void isKeyword(TokenizerT *tk);
 
-void DestroySpace (TokenizerT * tk);
 void printToken(TokenizerT *tk, char *next);
 
 char *TKGetNextToken( TokenizerT * tk );
