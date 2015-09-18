@@ -52,7 +52,9 @@ enum state{
   bitwiseandequals,
   bitwiseexclusiveorequals,
   bitwiseorequals,
-  comma
+  comma,
+
+  c_keyword
 
 };
 

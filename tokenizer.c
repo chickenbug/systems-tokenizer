@@ -510,47 +510,14 @@ void isKeyword(TokenizerT *tk){
     "volitle ",
     "while "
   };
-  
-  const int *keyword_list[32] = {
-    "auto ",
-    "break ",
-    "case ",
-    "char ", 
-    "const ", 
-    "continue ", 
-    "default ", 
-    "do ", 
-    "double ",
-    "else ",
-    "enum ",
-    "extern ",
-    "float ",
-    "for ",
-    "goto ",
-    "if ",
-    "int ",
-    "long ",
-    "register ",
-    "return ",
-    "short ",
-    "signed ",
-    "sizeof ",
-    "static ",
-    "struct ",
-    "switch ",
-    "typedef ",
-    "union ",
-    "unsigned ",
-    "void ",
-    "volitle ",
-    "while "
-  };
 
   int i, string_len;
   for(i = 0, i < 32, i++){
     string_len = strlen( keyword_list[i] );
     if( strncmp(tk->curr, keyword_list[i], string_len){
-      
+      tk->current_state = c_keyword;
+      tk->end = tk->start + string_len - 1;
+      tk->curr += sting_len; 
     }
   }
 }
@@ -713,102 +680,9 @@ void printToken(TokenizerT *tk, char *next){
 
   // keywords
   case 51:
-    printf("bitwise or equals");
+    printf("C Keyword");
     break;
-  case 52:
-    printf("comma");
-    break;
-  case 53:
-    printf("bitwise or equals");
-    break;
-  case 54:
-    printf("comma");
-    break;
-  case 55:
-    printf("bitwise or equals");
-    break;
-  case 56:
-    printf("comma");
-    break;
-  case 57:
-    printf("bitwise or equals");
-    break;
-  case 58:
-    printf("comma");
-    break;
-  case 59:
-    printf("bitwise or equals");
-    break;
-  case 60:
-    printf("comma");
-    break;
-  case 61:
-    printf("bitwise or equals");
-    break;
-  case 63:
-    printf("comma");
-    break;
-  case 64:
-    printf("bitwise or equals");
-    break;
-  case 65:
-    printf("comma");
-    break;
-  case 66:
-    printf("bitwise or equals");
-    break;
-  case 67:
-    printf("comma");
-    break;
-  case 68:
-    printf("bitwise or equals");
-    break;
-  case 69:
-    printf("comma");
-    break;
-  case 70:
-    printf("bitwise or equals");
-    break;
-  case 71:
-    printf("comma");
-    break;
-  case 72:
-    printf("bitwise or equals");
-    break;
-  case 73:
-    printf("comma");
-    break;
-  case 74:
-    printf("bitwise or equals");
-    break;
-  case 75:
-    printf("comma");
-    break;
-  case 76:
-    printf("bitwise or equals");
-    break;
-  case 77:
-    printf("comma");
-    break;
-  case 78:
-    printf("bitwise or equals");
-    break;
-  case 79:
-    printf("comma");
-    break;
-  case 80:
-    printf("bitwise or equals");
-    break;
-  case 81:
-    printf("comma");
-    break;
-  case 82:
-    printf("bitwise or equals");
-    break;
-  case 83:
-    printf("comma");
-    break;
-
+   
   //quotes and comments
   default:
     printf("Unknown State");
@@ -839,31 +713,33 @@ char *TKGetNextToken( TokenizerT * tk ) {
     if(*(tk->curr) == '0'){
       //check if space or end of string (zero)
       if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
-	tk->current_state = zero;
-	tk->curr++;
+	      tk->current_state = zero;
+	      tk->curr++;
       } 
       else{
-	switch( *((tk->curr) + 1) ){
-	case '.':
-	  tk->curr++;
-	  isFloat(tk);
-	  break;
-	case 'x':
-	  tk->curr++;
-	  isHexadecimal(tk);
-	  break;
-	case 'X':
-	  tk->curr++;
-	  isHexadecimal(tk);
-	  break;
-	case ' ':
-	  //this num is a zero. What do we do?
-	  break;
-	  // default case when you hit a zero is octal
-	default :
-	  isOctal(tk);
-	  break;            
-	}
+	      switch( *((tk->curr) + 1) ){
+	        case '.':
+	          tk->curr++;
+	          isFloat(tk);
+	          break;
+	        case 'x':
+	          tk->curr++;
+	          isHexadecimal(tk);
+	          break;
+	        case 'X':
+	          tk->curr++;
+	          isHexadecimal(tk);
+	          break;
+	        default :
+            if(isspace(*(tk->curr + 1))){
+	            tk->curr++;
+              tk->current_state = zero;
+            }
+            else{
+	            isOctal(tk);
+            }
+	          break;            
+	      }   
       }
     }
     else{
@@ -882,9 +758,11 @@ char *TKGetNextToken( TokenizerT * tk ) {
 
   else if(isalpha(*(tk->start))){
     // keywords functions here
-
-    //Words
-    isWord(tk);
+    isKeyword(tk);
+    if(tk->current_state != c_keyword){
+      //Words
+      isWord(tk);
+    }
   }
   else{
     printf("something is very wrong\n");
