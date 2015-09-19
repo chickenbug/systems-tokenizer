@@ -110,7 +110,7 @@ void isWord(TokenizerT * tk ){
 void isDecimal(TokenizerT * tk ){
   // i need to check if i transition to float due to next char
   //Punctuation is mal for now, deal with () [] // /**/ etc. later
-  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' || ispunct(*((tk->curr)+1)) ){
+  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' || (ispunct(*((tk->curr)+1))&&*((tk->curr)+1)!='.' ) ){
     tk->current_state = decimal;
     (tk->end) = (tk->curr);
     tk->curr++;
