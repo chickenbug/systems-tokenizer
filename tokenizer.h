@@ -74,7 +74,7 @@ TokenizerT *TKCreate( char * ts );
 void TKDestroy( TokenizerT * tk );
 
 void isMal(TokenizerT * tk );
-void isIncomplete(Tokenizer * tk);
+void isIncomplete(TokenizerT * tk);
 void isWord(TokenizerT * tk );
 void isDecimal(TokenizerT * tk );
 void isOctal(TokenizerT * tk );

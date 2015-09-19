@@ -283,15 +283,15 @@ void isCToken(TokenizerT * tk ){
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-      else if( ((*(tk->curr)+1))=='+' ){
+	    else if( ((*(tk->curr)+1))=='+' ){
 	      tk->current_state = inc;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-      else{
+	    else{
 	      tk->current_state = add;
 	      tk->curr++;
-      }
+	    }
 	    break;
     case '=':
 	    if( ((*(tk->curr)+1))=='=' ){
@@ -299,21 +299,22 @@ void isCToken(TokenizerT * tk ){
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-      else{
+	    else{
 	      tk->current_state = assignmentoperator;
 	      tk->curr++;
-      }
+	    }
 	   break;
     case '*':
-    if( ((*(tk->curr)+1))=='=' ){
-	      tk->current_state = timesequal;
+      if( ((*(tk->curr)+1))=='=' ){
+	      tk->current_state = multiplyequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-    else{
+      else{
     	tk->current_state = multiply;
     	tk->curr++;
   	  break;
+      }
     case '%':
 	    if( ((*(tk->curr)+1))=='=' ){
 	      tk->current_state = moduloequals;
@@ -411,7 +412,7 @@ void isCToken(TokenizerT * tk ){
 	    } 
 	    break;
     case '!':
-      else if(*((tk->curr)+1) == '='){
+      if(*((tk->curr)+1) == '='){
 	      tk->current_state = notequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -426,7 +427,7 @@ void isCToken(TokenizerT * tk ){
 	    tk->curr++;
     	break;
     case '^':
-      else if(*((tk->curr)+1) == '='){
+      if(*((tk->curr)+1) == '='){
 	      tk->current_state = bitwiseexclusiveorequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -457,7 +458,7 @@ void isCToken(TokenizerT * tk ){
 	    tk->curr++;
 	    break;
     case '|':
-      else if(*((tk->curr)+1) == '|'){
+       if(*((tk->curr)+1) == '|'){
 	      tk->current_state = logicalor;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -512,14 +513,17 @@ void isKeyword(TokenizerT *tk){
   };
 
   int i, string_len;
-  for(i = 0, i < 32, i++){
+  for(i = 0; i < 32; i++){
     string_len = strlen( keyword_list[i] );
-    if( strncmp(tk->curr, keyword_list[i], string_len){
-      tk->current_state = c_keyword;
-      tk->end = tk->start + string_len - 1;
-      tk->curr += sting_len; 
-    }
+     if( strncmp(tk->curr, keyword_list[i], string_len) ==0 ){
+        tk->current_state = c_keyword;
+        tk->end = tk->start + (string_len-2);
+	tk->curr += string_len;        
+	return;
+     }
   }
+  isWord(tk);
+  return;
 }
 
 void printToken(TokenizerT *tk, char *next){
@@ -738,9 +742,9 @@ char *TKGetNextToken( TokenizerT * tk ) {
             else{
 	            isOctal(tk);
             }
-	          break;            
-	      }   
-      }
+	    break;            
+	     }
+     }
     }
     else{
       isDecimal(tk);
@@ -759,10 +763,11 @@ char *TKGetNextToken( TokenizerT * tk ) {
   else if(isalpha(*(tk->start))){
     // keywords functions here
     isKeyword(tk);
-    if(tk->current_state != c_keyword){
-      //Words
+    //Words
+    /*    if(tk->current_state != c_keyword){
+      printf("im a word\n");
       isWord(tk);
-    }
+      }*/
   }
   else{
     printf("something is very wrong\n");
@@ -786,7 +791,7 @@ char *TKGetNextToken( TokenizerT * tk ) {
   strncpy(next,tk->start, ((tk->end)-(tk->start)+1));
 
   //print string
-  printToken( tk, next);
+    printToken( tk, next);
 
   //resets the string
   tk->start = tk->curr;
