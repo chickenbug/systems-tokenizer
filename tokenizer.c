@@ -89,8 +89,8 @@ void isMal(TokenizerT * tk ){
 
 //Recursively checks if the token is a word
 void isWord(TokenizerT * tk ){
-  //Punctuation is mal for now, deal with () [] // /**/ etc. later
-  if( isspace(*((tk->curr)+1)) || *((tk->curr)+1) =='\0' ){
+
+  if( isspace(*((tk->curr)+1)) || *((tk->curr)+1) =='\0'|| ispunct(*((tk->curr)+1)) ){
     tk->current_state = word;
     (tk->end) = (tk->curr);
     tk->curr++;
@@ -101,7 +101,7 @@ void isWord(TokenizerT * tk ){
     isWord(tk);
   }
   else{
-    (tk->curr)++;
+    tk->curr++;
     isMal(tk);
   }
 }
@@ -110,7 +110,7 @@ void isWord(TokenizerT * tk ){
 void isDecimal(TokenizerT * tk ){
   // i need to check if i transition to float due to next char
   //Punctuation is mal for now, deal with () [] // /**/ etc. later
-  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' ){
+  if( isspace( *((tk->curr)+1) ) || *((tk->curr)+1) =='\0' || ispunct(*((tk->curr)+1)) ){
     tk->current_state = decimal;
     (tk->end) = (tk->curr);
     tk->curr++;
@@ -129,8 +129,9 @@ void isDecimal(TokenizerT * tk ){
     isFloatE(tk);
   }
   else{
-    (tk->curr)++;
+    tk->curr++;
     isMal(tk);
+
   }
   
 
@@ -252,22 +253,60 @@ void isCToken(TokenizerT * tk ){
   //use recursive advantage to add +/- to valid float token in CToken function
   //+/- float only applies if white space is in front; otherwise we just take the +/- and discard the rest of token
   //
-
-  //if( *(tk->curr) ==33 ||  *(tk->curr) ==58 || ( *(tk->curr)>=37&&*(tk->curr)<=47 ) || ( *(tk->curr)>=60&&*(tk->curr)<=63 ) || ( *(tk->curr)>=91&&*(tk->curr)<=94 ) || ( *(tk->curr)>=123&&*(tk->curr)<=126 )  ){
   
   switch( *(tk->curr) ){
+    case '\\':
+      if(*((tk->curr)+1)== 'n'){
+	printf("(0x0a) ");
+	tk->current_state = error;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+      else if(*((tk->curr)+1)== 't'){
+	printf("(0x09) ");
+	tk->current_state = error;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+      else if(*((tk->curr)+1)== 'f'){
+	printf("(0x0c) ");
+	tk->current_state = error;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+      else if(*((tk->curr)+1)== 'r'){
+	printf("(0x0d) ");
+	tk->current_state = error;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+      else if(*((tk->curr)+1)== 'b'){
+	printf("(0x08) ");
+	tk->current_state = error;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+      else{
+	printf("(0x5c) ");
+	tk->current_state = error;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+
+
+      break;
     case '-':
-	    if( ((*(tk->curr)+1))=='>' ){
-	      tk->current_state = structuremember;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-	    else if( (*((tk->curr)+1)) == '-' ){
+      if( (*((tk->curr)+1) )=='>' ){
+	tk->current_state = structuremember;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+      else if( (*((tk->curr)+1) ) == '-' ){
 	      tk->current_state = dec;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-	    else if( (*((tk->curr)+1))== '=' ){
+	    else if( (*((tk->curr)+1) )== '=' ){
 	      tk->current_state = minusequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -278,12 +317,12 @@ void isCToken(TokenizerT * tk ){
 	    }
   	  break;
     case '+':
-	    if( ((*(tk->curr)+1))=='=' ){
-	      tk->current_state = plusequals;
+      if( *((tk->curr)+1) =='=' ){
+              tk->current_state = plusequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-	    else if( ((*(tk->curr)+1))=='+' ){
+	    else if( *((tk->curr)+1)=='+' ){
 	      tk->current_state = inc;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -294,18 +333,18 @@ void isCToken(TokenizerT * tk ){
 	    }
 	    break;
     case '=':
-	    if( ((*(tk->curr)+1))=='=' ){
-	      tk->current_state = equals;
+      if( *((tk->curr)+1) =='=' ){
+	    tk->current_state = equals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-	    else{
+      else{
 	      tk->current_state = assignmentoperator;
 	      tk->curr++;
 	    }
-	   break;
+      break;
     case '*':
-      if( ((*(tk->curr)+1))=='=' ){
+      if( *((tk->curr)+1) == '=' ){
 	      tk->current_state = multiplyequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -316,7 +355,7 @@ void isCToken(TokenizerT * tk ){
   	  break;
       }
     case '%':
-	    if( ((*(tk->curr)+1))=='=' ){
+      if( *((tk->curr)+1)=='=' ){
 	      tk->current_state = moduloequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -327,13 +366,13 @@ void isCToken(TokenizerT * tk ){
       }
 	    break;
     case '>':
-	    if( ((*(tk->curr)+1))=='=' ){
+      if( *((tk->curr)+1) =='=' ){
 	      tk->current_state = greaterorequal;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-      else if( ((*(tk->curr)+1))=='>' ){
-	      if( ((*(tk->curr)+2))=='=' ){
+      else if(*((tk->curr)+1) =='>' ){
+	      if( *((tk->curr)+2) =='=' ){
 	        tk->current_state = shiftrightequals;
 	        tk->curr+=3;
 	        tk->end = tk->curr-1;
@@ -350,13 +389,13 @@ void isCToken(TokenizerT * tk ){
       }
 	    break;
     case '<':
-	    if( ((*(tk->curr)+1))=='=' ){
+      if(*((tk->curr)+1) =='=' ){
 	      tk->current_state = lessorequal;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-      else if( ((*(tk->curr)+1))=='<' ){
-	      if( ((*(tk->curr)+2))=='=' ){
+      else if( *((tk->curr)+1) =='<' ){
+	      if( *((tk->curr)+1) =='=' ){
 	        tk->current_state = shiftleftequals;
 	        tk->curr+=3;
 	        tk->end = tk->curr-1;
@@ -396,23 +435,23 @@ void isCToken(TokenizerT * tk ){
 	    tk->curr++;
     	break;
     case '&':
-	    if(*((tk->curr)+1) == '='){
+      if( *((tk->curr)+1) == '='){
 	      tk->current_state = bitwiseandequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-      else if(*((tk->curr)+1) == '&'){
+      else if( *((tk->curr)+1) == '&'){
 	      tk->current_state = logicaland;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
 	    }
-	    else{
+      else{
 	      tk->current_state = bitwiseand;
 	      tk->curr++;
-	    } 
+      } 
 	    break;
     case '!':
-      if(*((tk->curr)+1) == '='){
+      if( *((tk->curr)+1) == '='){
 	      tk->current_state = notequals;
 	      tk->curr+=2;
 	      tk->end = tk->curr-1;
@@ -469,6 +508,7 @@ void isCToken(TokenizerT * tk ){
 	    } 
     	break;
     default:
+      //     printf("not handled\n");
 	    isMal(tk);
     	break;
     }
@@ -705,6 +745,7 @@ char *TKGetNextToken( TokenizerT * tk ) {
   //skips past blank space
   //Change to destroy later to be safe
   if( isspace(*(tk->start)) ){
+    printf("hey\n");
     tk->start++;
     tk->curr = tk->start;
     tk->end = tk->start;
@@ -771,6 +812,10 @@ char *TKGetNextToken( TokenizerT * tk ) {
   }
   else{
     printf("something is very wrong\n");
+    //    if(*(tk->curr)==9){
+      printf("(0x0a) \n");
+      return NULL;
+      // }
   }
   /*
     Have to calloc because reusing same memory so often sometimes gives us dirty memory, 

@@ -1,7 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-int main(){
-  printf("\n\t\b\'\r\f\\");
+int main(int argc, char**argv){
+
+  printf("\t");
   return 0;
+
+
 }
