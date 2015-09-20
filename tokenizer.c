@@ -7,40 +7,40 @@
 #include <ctype.h>
 #include "tokenizer.h"
 
- const char *keyword_list[32] = {
-    "auto",
-    "break",
-    "case",
-    "char", 
-    "const", 
-    "continue", 
-    "default", 
-    "do", 
-    "double",
-    "else",
-    "enum",
-    "extern",
-    "float",
-    "for",
-    "goto",
-    "if",
-    "int",
-    "long",
-    "register",
-    "return",
-    "short",
-    "signed",
-    "sizeof",
-    "static",
-    "struct",
-    "switch",
-    "typedef",
-    "union",
-    "unsigned",
-    "void",
-    "volatile",
-    "while"
-  };
+const char *keyword_list[32] = {
+  "auto",
+  "break",
+  "case",
+  "char", 
+  "const", 
+  "continue", 
+  "default", 
+  "do", 
+  "double",
+  "else",
+  "enum",
+  "extern",
+  "float",
+  "for",
+  "goto",
+  "if",
+  "int",
+  "long",
+  "register",
+  "return",
+  "short",
+  "signed",
+  "sizeof",
+  "static",
+  "struct",
+  "switch",
+  "typedef",
+  "union",
+  "unsigned",
+  "void",
+  "volatile",
+  "while"
+};
 
 //creates a tokenizer object containing the input string with a default state of error
 TokenizerT *TKCreate( char * ts ) {
@@ -150,7 +150,7 @@ void isDecimal(TokenizerT * tk ){
   }
 }
 
-//Recursively checks if token is a OcatalDecimal which cannot become a float 
+//Recursively checks if token is a decimal that came from an octal (ex. 0089),  which cannot become a float 
 void isOctalDecimal(TokenizerT * tk ){
   if(isDelim(*(tk->curr+1))){
     tk->current_state = decimal;
@@ -278,239 +278,239 @@ void isFloatE(TokenizerT * tk ){
 //checks if the token is a valid c token, passing the token to isSingleQuote or isDoubleQuote and necessary.
 void isCToken(TokenizerT * tk ){
   switch( *(tk->curr) ){
-   case '-':
-      if( (*((tk->curr)+1) )=='>' ){
-	tk->current_state = structurepointer;
+  case '-':
+    if( (*((tk->curr)+1) )=='>' ){
+      tk->current_state = structurepointer;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else if( (*((tk->curr)+1) ) == '-' ){
+      tk->current_state = dec;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else if( (*((tk->curr)+1) )== '=' ){
+      tk->current_state = minusequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = subtract;
+      tk->curr++;
+    }
+    break;
+  case '+':
+    if( *((tk->curr)+1) =='=' ){
+      tk->current_state = plusequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else if( *((tk->curr)+1)=='+' ){
+      tk->current_state = inc;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = add;
+      tk->curr++;
+    }
+    break;
+  case '=':
+    if( *((tk->curr)+1) =='=' ){
+      tk->current_state = equals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = assignmentoperator;
+      tk->curr++;
+    }
+    break;
+  case '*':
+    if( *((tk->curr)+1) == '=' ){
+      tk->current_state = multiplyequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = multiply;
+      tk->curr++;
+    }	
+    break;
+      
+  case '%':
+    if( *((tk->curr)+1)=='=' ){
+      tk->current_state = moduloequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = modulo;
+      tk->curr++;
+    }
+    break;
+  case '>':
+    if( *((tk->curr)+1) =='=' ){
+      tk->current_state = greaterorequal;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else if(*((tk->curr)+1) =='>' ){
+      if( *((tk->curr)+2) =='=' ){
+	tk->current_state = shiftrightequals;
+	tk->curr+=3;
+	tk->end = tk->curr-1;
+      }
+      else{
+	tk->current_state = shiftright;
 	tk->curr+=2;
 	tk->end = tk->curr-1;
       }
-      else if( (*((tk->curr)+1) ) == '-' ){
-	      tk->current_state = dec;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else if( (*((tk->curr)+1) )== '=' ){
-	      tk->current_state = minusequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else{
-	      tk->current_state = subtract;
-	      tk->curr++;
-	    }
-  	  break;
-    case '+':
-      if( *((tk->curr)+1) =='=' ){
-              tk->current_state = plusequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-	    else if( *((tk->curr)+1)=='+' ){
-	      tk->current_state = inc;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-	    else{
-	      tk->current_state = add;
-	      tk->curr++;
-	    }
-	    break;
-    case '=':
-      if( *((tk->curr)+1) =='=' ){
-	    tk->current_state = equals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else{
-	      tk->current_state = assignmentoperator;
-	      tk->curr++;
-	    }
-      break;
-    case '*':
-      if( *((tk->curr)+1) == '=' ){
-	      tk->current_state = multiplyequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else{
-    	tk->current_state = multiply;
-    	tk->curr++;
-      }	
-      break;
-      
-    case '%':
-      if( *((tk->curr)+1)=='=' ){
-	      tk->current_state = moduloequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else{
-	      tk->current_state = modulo;
-	      tk->curr++;
-      }
-	    break;
-    case '>':
-      if( *((tk->curr)+1) =='=' ){
-	      tk->current_state = greaterorequal;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else if(*((tk->curr)+1) =='>' ){
-	      if( *((tk->curr)+2) =='=' ){
-	        tk->current_state = shiftrightequals;
-	        tk->curr+=3;
-	        tk->end = tk->curr-1;
-	      }
-        else{
-	        tk->current_state = shiftright;
-	        tk->curr+=2;
-	        tk->end = tk->curr-1;
-	      }
-      }
-      else{
-        tk->current_state = greaterthan;
-        tk->curr++;
-      }
-	    break;
-    case '<':
-      if(*((tk->curr)+1) =='=' ){
-	      tk->current_state = lessorequal;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-      }
-      else if( *((tk->curr)+1) =='<' ){
-	      if( *((tk->curr)+2) =='=' ){
-	        tk->current_state = shiftleftequals;
-	        tk->curr+=3;
-	        tk->end = tk->curr-1;
-	      }
-	      else{
-	        tk->current_state = shiftleft;
-	        tk->curr+=2;
-	        tk->end = tk->curr-1;
-	      }
-      }
-      else{
-	      tk->current_state = lessthan;
-	      tk->curr++;
-      }
-	    break;
-    case '/':
-	    if(*((tk->curr)+1) == '='){
-	      tk->current_state = divideequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-	    else{
-	      tk->current_state = divide;
-	      tk->curr++;
-	    } 
-  	  break;
-    case '(':
-	    tk->current_state = leftparen;
-	    tk->curr++;
-	    break;
-    case ')':
-	    tk->current_state = rightparen;
-	    tk->curr++;
-    	break;
-    case '.':
-	    tk->current_state = structuremember;
-	    tk->curr++;
-    	break;
-    case '&':
-      if( *((tk->curr)+1) == '='){
-	      tk->current_state = bitwiseandequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else if( *((tk->curr)+1) == '&'){
-	      tk->current_state = logicaland;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-      else{
-	      tk->current_state = bitwiseand;
-	      tk->curr++;
-      } 
-	    break;
-    case '!':
-      if( *((tk->curr)+1) == '='){
-	      tk->current_state = notequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-       }
-       else{
-	      tk->current_state = negate;
-	      tk->curr++;
-       } 
-    	break;
-    case '~':
-	    tk->current_state = onescomplement;
-	    tk->curr++;
-    	break;
-    case '^':
-      if(*((tk->curr)+1) == '='){
-	      tk->current_state = bitwiseexclusiveorequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-	    }
-	    else{
-	      tk->current_state = bitwiseexclusiveor;
-	      tk->curr++;
-	    } 
-	    break;
-    case '[':
-	    tk->current_state = leftbracket;
-	    tk->curr++;
-    	break;
-    case ']':
-	    tk->current_state = rightbracket;
-	    tk->curr++;
-	    break;
-    case '?':
-	    tk->current_state = trueop;
-	    tk->curr++;
-	    break;
-    case ':':
-	    tk->current_state = falseop;
-	    tk->curr++;
-	    break;
-    case ',':
-	    tk->current_state = comma;
-	    tk->curr++;
-	    break;
-    case '|':
-       if(*((tk->curr)+1) == '|'){
-	      tk->current_state = logicalor;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-        }
-      else if(*((tk->curr)+1) == '='){
-	      tk->current_state = bitwiseorequals;
-	      tk->curr+=2;
-	      tk->end = tk->curr-1;
-        }
-
-       else{
-	      tk->current_state = bitwiseor;
-	      tk->curr++;
-	    } 
-    	break;
-    case '\'':
-      if(!isSingleQuote(tk)){
-	isMal(tk);
-      }
-      break;
-    case '\"':
-      if(!isDoubleQuote(tk)){
-	isMal(tk);
-      }
-      break;
-    default:
-	    isMal(tk);
-    	break;
     }
+    else{
+      tk->current_state = greaterthan;
+      tk->curr++;
+    }
+    break;
+  case '<':
+    if(*((tk->curr)+1) =='=' ){
+      tk->current_state = lessorequal;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else if( *((tk->curr)+1) =='<' ){
+      if( *((tk->curr)+2) =='=' ){
+	tk->current_state = shiftleftequals;
+	tk->curr+=3;
+	tk->end = tk->curr-1;
+      }
+      else{
+	tk->current_state = shiftleft;
+	tk->curr+=2;
+	tk->end = tk->curr-1;
+      }
+    }
+    else{
+      tk->current_state = lessthan;
+      tk->curr++;
+    }
+    break;
+  case '/':
+    if(*((tk->curr)+1) == '='){
+      tk->current_state = divideequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = divide;
+      tk->curr++;
+    } 
+    break;
+  case '(':
+    tk->current_state = leftparen;
+    tk->curr++;
+    break;
+  case ')':
+    tk->current_state = rightparen;
+    tk->curr++;
+    break;
+  case '.':
+    tk->current_state = structuremember;
+    tk->curr++;
+    break;
+  case '&':
+    if( *((tk->curr)+1) == '='){
+      tk->current_state = bitwiseandequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else if( *((tk->curr)+1) == '&'){
+      tk->current_state = logicaland;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = bitwiseand;
+      tk->curr++;
+    } 
+    break;
+  case '!':
+    if( *((tk->curr)+1) == '='){
+      tk->current_state = notequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = negate;
+      tk->curr++;
+    } 
+    break;
+  case '~':
+    tk->current_state = onescomplement;
+    tk->curr++;
+    break;
+  case '^':
+    if(*((tk->curr)+1) == '='){
+      tk->current_state = bitwiseexclusiveorequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else{
+      tk->current_state = bitwiseexclusiveor;
+      tk->curr++;
+    } 
+    break;
+  case '[':
+    tk->current_state = leftbracket;
+    tk->curr++;
+    break;
+  case ']':
+    tk->current_state = rightbracket;
+    tk->curr++;
+    break;
+  case '?':
+    tk->current_state = trueop;
+    tk->curr++;
+    break;
+  case ':':
+    tk->current_state = falseop;
+    tk->curr++;
+    break;
+  case ',':
+    tk->current_state = comma;
+    tk->curr++;
+    break;
+  case '|':
+    if(*((tk->curr)+1) == '|'){
+      tk->current_state = logicalor;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+    else if(*((tk->curr)+1) == '='){
+      tk->current_state = bitwiseorequals;
+      tk->curr+=2;
+      tk->end = tk->curr-1;
+    }
+
+    else{
+      tk->current_state = bitwiseor;
+      tk->curr++;
+    } 
+    break;
+  case '\'':
+    if(!isSingleQuote(tk)){
+      isMal(tk);
+    }
+    break;
+  case '\"':
+    if(!isDoubleQuote(tk)){
+      isMal(tk);
+    }
+    break;
+  default:
+    isMal(tk);
+    break;
+  }
   return;
 }
 
@@ -521,11 +521,11 @@ void isKeyword(TokenizerT *tk){
   for(i = 0; i < 32; i++){
     string_len = strlen( keyword_list[i] );
     if( (strncmp(tk->curr, keyword_list[i], string_len) == 0) && isDelim(*(tk->curr+string_len)) ){
-        tk->current_state = c_keyword;
-        tk->end = tk->start + (string_len-1);
-	tk->curr += string_len;        
-	return;
-     }
+      tk->current_state = c_keyword;
+      tk->end = tk->start + (string_len-1);
+      tk->curr += string_len;        
+      return;
+    }
   }
   isWord(tk);
   return;
@@ -541,7 +541,7 @@ int isSingleQuote(TokenizerT *tk){
       tk->current_state = string;
       return 1;
     }
-     tk->curr++;
+    tk->curr++;
   }
   tk->curr = tk->start;
   return 0;
@@ -557,7 +557,7 @@ int isDoubleQuote(TokenizerT *tk){
       tk->current_state = string;
       return 1;
     }
-     tk->curr++;
+    tk->curr++;
   }
   tk->curr = tk->start;
   return 0;
@@ -573,7 +573,7 @@ int isMultiComment(TokenizerT *tk){
       tk->end = tk->curr; 
       return 1;
     }
-     tk->curr++;
+    tk->curr++;
   }
   tk->curr = tk->start; 
   return 0;
@@ -589,7 +589,7 @@ int isSingleComment(TokenizerT *tk){
       tk->end = tk->curr; 
       return 1;
     }
-     tk->curr++;
+    tk->curr++;
   }
   tk->start = tk->curr;
   tk->end = tk->curr;
@@ -623,7 +623,7 @@ void printToken(TokenizerT *tk, char *next){
   case 5:
     printf("float");
     break;
-  //CTokens
+    //CTokens
   case 7:
     printf("leftbrace");
     break;
@@ -757,7 +757,7 @@ void printToken(TokenizerT *tk, char *next){
     printf("comma");
     break;
 
-  // keywords
+    // keywords
   case 51:
     printf("C Keyword");
     break;
@@ -791,40 +791,40 @@ char *TKGetNextToken( TokenizerT * tk ) {
     if(*(tk->curr) == '0'){
       //check if valid delimiator exists after the zero (zero-state)
       if(isDelim(*(tk->curr+1)) && *(tk->curr+1) != '.'){
-	      tk->current_state = zero;
-	      tk->curr++;
+	tk->current_state = zero;
+	tk->curr++;
       } 
       else{
-	      switch( *((tk->curr) + 1) ){
-	        case '.':
-		        if(isDelim(*(tk->curr+2))){
-		          tk->current_state = zero;
-              tk->curr++;
-		        }
-		        else{
-		          tk->curr++;
-		          isFloat(tk);
-		        }
-	          break;
-	        case 'x':
-	          tk->curr++;
-	          isHexadecimal(tk);
-	          break;
-	        case 'X':
-	          tk->curr++;
-	          isHexadecimal(tk);
-	          break;
-	        default :
-            if(isDelim(*(tk->curr + 1))){
-	            tk->curr++;
-              tk->current_state = zero;
-            }
-            else{
-	            isOctal(tk);
-            }
-	    break;            
-	     }
-     }
+	switch( *((tk->curr) + 1) ){
+	case '.':
+	  if(isDelim(*(tk->curr+2))){
+	    tk->current_state = zero;
+	    tk->curr++;
+	  }
+	  else{
+	    tk->curr++;
+	    isFloat(tk);
+	  }
+	  break;
+	case 'x':
+	  tk->curr++;
+	  isHexadecimal(tk);
+	  break;
+	case 'X':
+	  tk->curr++;
+	  isHexadecimal(tk);
+	  break;
+	default :
+	  if(isDelim(*(tk->curr + 1))){
+	    tk->curr++;
+	    tk->current_state = zero;
+	  }
+	  else{
+	    isOctal(tk);
+	  }
+	  break;            
+	}
+      }
     }
     else{
       isDecimal(tk);
@@ -844,7 +844,7 @@ char *TKGetNextToken( TokenizerT * tk ) {
   //tokens that start with alphabetic characters (word, keyword) are dealt with here
   else if(isalpha(*(tk->start))){
     isKeyword(tk);
-    }
+  }
   else{
     if(isEscape(*(tk->curr))){ 
       printf("[%#x]\n", *(tk->curr));
@@ -862,8 +862,7 @@ char *TKGetNextToken( TokenizerT * tk ) {
     return NULL;
   }
   /*
-    Have to calloc because reusing same memory so often sometimes gives us dirty memory, 
-    i.e. printouts that are wrong 
+    Used calloc to get "clean" memory of all 0's
     Doing so allows us to free the pointer, next
   */
 
@@ -872,7 +871,7 @@ char *TKGetNextToken( TokenizerT * tk ) {
 
   strncpy(next,tk->start, ((tk->end)-(tk->start)+1));
   //print string
-    printToken( tk, next);
+  printToken( tk, next);
 
   //resets the string
   tk->start = tk->curr;
@@ -894,9 +893,6 @@ int main(int argc, char **argv) {
   TokenizerT *tokenizer = TKCreate(argv[1]);
   
   while(*(tokenizer->curr)!='\0'){
-    if(*(tokenizer->curr)=='\0'){
-      // break;
-    }
     TKGetNextToken(tokenizer);
   }
 
