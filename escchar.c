@@ -3,7 +3,7 @@
 
 int main(int argc, char**argv){
 
-  printf("hello:'hi' 6 '3 ");
+  printf("a+b 10. 0");
   return 0;
 
 

@@ -1,5 +1,8 @@
 Case			Input				Expected Output
 
+
+BASIC CASES
+
 No Arg			no argument			"Error: Incorrect Number of Arguments"
 
 Empty arg		"" 				
@@ -60,3 +63,61 @@ Single quotes		"hello:'hi' 6 '3"		word "hello"
 							string "'hi'"
 							decimal "6"
 							Malformed Token, Moving to Next
+
+
+
+
+
+COMPLEX CASES
+
+Quotes 		"'  # :! ran$ ' '123' g'13.0' [\"a \t\n k\"]/*whee!\nword"	string "'  # :! ran$ '"
+       			      	      	      	      	   		 	string "'123'"
+										 Malformed Token, Moving to Next
+									 	 leftbracket "[" 
+									 	 string ""a  
+									  	 k""
+									  	 rightbracket "]"
+       			      	      	   				 	 divide "/"
+									 	 multiply "*"
+									 	 word "whee"
+									  	 negate "!"
+									  	 word "word"
+							
+
+Nested Operators,	"{fun}~'c'&&[10*3(var)]^=17.325E-2\v00230"	Malformed Token, Moving to Next
+Invalid Punctuation       						onescomplement "~"
+									string "'c'"
+									logical and "&&"
+									leftbracket "["
+									decimal "10"
+									multiply "*"
+									decimal "3"
+									left parentheses "("
+									word "var"
+									right parentheses ")"
+							      		rightbracket "]"
+									bitwise exclusive or equals "^="
+									float "17.325E-2"
+							     		octal "00230"
+
+
+
+Multiple C Operators,	"\n\r\\n 0.++++=..*="				Malformed Token, Moving to Next
+Escape chars at start	  			 			Malformed Token, Moving to Next
+									inc "++"
+									inc "++"
+									assignment operator "="
+									structuremember "."
+									structuremember "."
+									multiply equals "*="
+
+
+
+Malformed tokens produce an error message of "Malformed Token, Moving to Next". 
+
+Delimiters are  valid C-operators (excluding '+', '-', '.', ''', and '"'), escape characters, and whitespace.
+If a token starts with or contains  any other symbol (such as '#' or '@'), then the token is malformed unless it is the case of MATCHING single or double quotes.
+
+Tokens that contain an unmatched single or double quote are always malformed. Only if the token contains a matched pair of single or double quotes and there is a delimiter in front of the quotes, then the contents within the quotes are a string token. If there are escape characters within a string token, they do not produce a hexadecimal print message.  The string token is printed out with single or double quotes around it. 
+
+
