@@ -7,8 +7,8 @@ enum state{
   octal,
   hexadecimal,
   floating_point,
-  // COperators
   error,
+  //COperators
   leftbrace,
   rightbrace,
   leftbracket,
@@ -17,12 +17,12 @@ enum state{
   structurepointer,
   multiply,
   bitwiseand,
-  minus,
+  leftparen,
   negate,
   onescomplement,
   inc,
   dec,
-  cast,
+  rightparen,
   divide,
   modulo,
   add,
@@ -54,8 +54,8 @@ enum state{
   bitwiseorequals,
   comma,
 
-  c_keyword
-
+  c_keyword,
+  string
 };
 
 
@@ -83,6 +83,9 @@ void isFloat(TokenizerT * tk );
 void isFloatE(TokenizerT * tk );
 void isCToken(TokenizerT * tk );
 void isKeyword(TokenizerT *tk);
+int isSingleQuote(TokenizerT *tk);
+int isDoubleQuote(TokenizerT *tk);
+int isDelim(char ch);
 
 void printToken(TokenizerT *tk, char *next);
 
