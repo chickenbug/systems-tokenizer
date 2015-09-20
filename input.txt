@@ -1,1 +1,2 @@
-0x4356abdc 0777 [] 
+//hello there
+emily hai kinh ariel “ “ 

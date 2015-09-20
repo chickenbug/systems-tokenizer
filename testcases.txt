@@ -1,0 +1,62 @@
+Case			Input				Expected Output
+
+No Arg			no argument			"Error: Incorrect Number of Arguments"
+
+Empty arg		"" 				
+
+Basic word		"cats"
+
+Word deliniated		"[dogs] ca56ts claws\b"		leftbracket "["
+     				     			word "dogs"
+							rightbracket "]"
+							word "ca56ts"
+							word "claws"
+							[0x8]
+
+Malformed Word	       	"apple>=pear@berry->.a"		word "apple"
+	  						greater than or equal ">="
+							Malformed Token, Moving to Next
+
+Basic numbers		"03254 08124 1.0"		octal "03254"
+      			       				decimal "08124"
+							float "1.0"
+
+Advanced floats		"1e4 1.2E6 1e-2 4.2E+4"		float "1e4"
+	 		     	   			float "1.2E6"
+							float "1e-2"
+							float "4.2E+4"
+
+Invalid floats		"1. 1e 2E 3e- 4-"		Malformed Token, Moving to Next
+			       	      			Malformed Token, Moving to Next
+							Malformed Token, Moving to Next
+							Malformed Token, Moving to Next
+							decimal "4"
+							subtract "-"
+
+Basic C-operators	"*= .^()"			multiply equals "*="
+      			    				structuremember "."
+							bitwise exclusive or "^"
+							left parentheses "("
+							right parentheses ")"						
+
+Hexadecimal		"0xA 0X1234 0X67t1"		hexadecimal "0xA"
+			     	    			hexadecimal "0X1234"
+							Malformed Token, Moving to Next
+
+Keywords		"enum if() sizeof switch234"	C Keyword "enum"
+			      	   	  		C Keyword "if"
+							left parentheses "("
+							right parentheses ")"
+							C Keyword "sizeof"
+							word "switch234"
+
+Single Line Comments 	""		
+       	    			    	
+Multiple Line Comments	"789.4\*today*\foo"		float "789.4"
+	      						word "foo"
+
+Single quotes		"hello:'hi' 6 '3"		word "hello"
+       				      			false conditional ":"
+							string "'hi'"
+							decimal "6"
+							Malformed Token, Moving to Next

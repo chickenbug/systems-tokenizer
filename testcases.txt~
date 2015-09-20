@@ -1,0 +1,32 @@
+Case			Input				Expected Output
+
+No Arg			no argument			"Error: Incorrect Number of Arguments"
+
+Basic word		"cats"
+
+Word deliniated		"[dogs] ca56ts claws\b"		leftbracket "["
+     				     			word "dogs"
+							rightbracket "]"
+							word "ca56ts"
+							word "claws"
+							[0x8]
+
+Malformed Word	       	apple>=pear@berry->.a		word "apple"
+	  						greater than or equal ">="
+							Malformed Token, Moving to Next
+
+Basic numbers		"03254 08124 1.0"		octal "03254"
+      			       				decimal "08124"
+							float "1.0"
+
+Advanced floats		"1e4 1.2E6 1e-2 4.2E+4"		float "1e4"
+	 		     	   			float "1.2E6"
+							float "1e-2"
+							float "4.2E+4"
+
+Basic C-operators	"*= .^()"			multiply equals "*="
+      			    				structuremember "."
+							bitwise exclusive or "^"
+							left parentheses "("
+							right parentheses ")"						
+
