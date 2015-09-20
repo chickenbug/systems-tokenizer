@@ -7,30 +7,6 @@
 #include <ctype.h>
 #include "tokenizer.h"
 
-/*
-enum state{
-  word,
-  decimal,
-  octal,
-  hexadecimal,
-  floating_point,
-  C_operator,
-  error
-};
-
-
-struct TokenizerT_ {
-  char *string;
-
-  char *start;
-  char *curr;
-  char *end;
-};
-
-typedef struct TokenizerT_ TokenizerT;
-*/
-
-
  const char *keyword_list[32] = {
     "auto",
     "break",
@@ -88,23 +64,22 @@ TokenizerT *TKCreate( char * ts ) {
   return new_tokenizer;
 }
 
-
 void TKDestroy( TokenizerT * tk ) {
   free(tk->string);
   free(tk);
 }
 
-//handles  malformed tokens. 
+//handles malformed tokens. 
 void isMal(TokenizerT * tk ){
   //advance the pointers past the malformed token and set error state
   while(!isDelim(*(tk->curr+1))){
     tk->curr++;
-    if(*(tk->curr)=='\0') printf("the null term");
   }
   tk->current_state = error;
   tk->curr++;
   tk->start = tk->curr;
   tk->end = tk->curr;
+  printf("Malformed Token, Moving to Next\n");
   return;
 }
 
@@ -176,7 +151,24 @@ void isDecimal(TokenizerT * tk ){
   }
 }
 
-//Recursively checks if the token is an Octal
+//Recursively checks if token is a OcatalDecimal which cannot become a float 
+void isOctalDecimal(TokenizerT * tk ){
+  if(isDelim(*(tk->curr+1))){
+    tk->current_state = decimal;
+    (tk->end) = (tk->curr);
+    tk->curr++;
+    return;
+  }
+  else if( isdigit( *((tk->curr)+1) )){
+    tk->curr++;
+    isOctalDecimal(tk);
+  }
+  else{
+    tk->curr++;
+    isMal(tk);
+  }
+}
+//Recursively checks if the token is an Octal, passing to is Decimal as necessary
 void isOctal(TokenizerT * tk ){
   if(isDelim(*(tk->curr+1))){
     tk->current_state = octal;
@@ -187,10 +179,10 @@ void isOctal(TokenizerT * tk ){
   else if( isdigit( *((tk->curr)+1) )){
     switch( *((tk->curr)+1) ){
     case '8':
-      isDecimal(tk);
+      isOctalDecimal(tk);
       break;
     case '9':
-      isDecimal(tk);
+      isOctalDecimal(tk);
       break;
     default:
       (tk->curr)++;
@@ -276,17 +268,15 @@ void isFloatE(TokenizerT * tk ){
     else{
       (tk->curr)++;
       isMal(tk);
-      //return;
     }
   }
   else{
-    //    printf("here \n");
     (tk->curr)++;
     isMal(tk);
   }    
 }
 
-//checks if the token is a valid c token. Sizeof is checked in the keyword function
+//checks if the token is a valid c token, passing the token to isSingleQuote or isDoubleQuote and necessary.
 void isCToken(TokenizerT * tk ){
   switch( *(tk->curr) ){
    case '-':
@@ -519,13 +509,14 @@ void isCToken(TokenizerT * tk ){
       }
       break;
     default:
-      //     printf("not handled\n");
 	    isMal(tk);
     	break;
     }
   return;
 }
 
+//Checks if token is a valid C keyword, using the valid keyword_list array.
+//If not, passes the token to isWord to be treated as a word
 void isKeyword(TokenizerT *tk){
   int i, string_len;
   for(i = 0; i < 32; i++){
@@ -541,6 +532,7 @@ void isKeyword(TokenizerT *tk){
   return;
 }
 
+//Checks if token is a valid single-quotes string
 int isSingleQuote(TokenizerT *tk){
   tk->curr++;
   while(*(tk->curr) != '\0'){
@@ -556,6 +548,7 @@ int isSingleQuote(TokenizerT *tk){
   return 0;
 }
 
+//Checks if token is a balid double-quoted string
 int isDoubleQuote(TokenizerT *tk){
   tk->curr++;
   while(*(tk->curr) != '\0'){
@@ -571,6 +564,7 @@ int isDoubleQuote(TokenizerT *tk){
   return 0;
 }
 
+//Checks token is a valid multiline comment, setting start and end positions to skip accordingly
 int isMultiComment(TokenizerT *tk){
   tk->curr+=2;
   while(*(tk->curr) != '\0'){
@@ -586,6 +580,7 @@ int isMultiComment(TokenizerT *tk){
   return 0;
 }
 
+//Checks if token is a valid singleline C comment, setting the start and end positions to skip accordingly
 int isSingleComment(TokenizerT *tk){
   tk->curr+=2;
   while(*(tk->curr) != '\0'){
@@ -602,11 +597,13 @@ int isSingleComment(TokenizerT *tk){
   return 0;  
 }
 
+//checks if the character is a valid escape character
 int isEscape(char ch){
   if(((ch >= 0) && (ch <= 31))|| ch >=127) return 1;
   return 0;
 }
 
+//Prints the state and the token using switch cases to determine the state to print
 void printToken(TokenizerT *tk, char *next){
   switch( (tk->current_state) ){
   case 0:
@@ -626,10 +623,6 @@ void printToken(TokenizerT *tk, char *next){
     break;
   case 5:
     printf("float");
-    break;
-  case 6:
-    printf("Malformed Token, Moving to Next\n");
-    return;
     break;
   //CTokens
   case 7:
@@ -772,7 +765,6 @@ void printToken(TokenizerT *tk, char *next){
   case 52:
     printf("string");
     break;
-  //quotes and comments
   default:
     printf("Unknown State");
     break;
@@ -781,26 +773,24 @@ void printToken(TokenizerT *tk, char *next){
   printf(" \"%s\"\n", next);
 }
 
-
-
-//SET STATE OF TOKEN AT THE END
+//Our Main function. 
+//This function pulls out the next token in the input string and determines its state.
+//At the end of this function, the state and the token itself is printed.
+//The function returns the string if we find a valid token, or null otherwise.
 
 char *TKGetNextToken( TokenizerT * tk ) {
-
   //skips past blank space
-  //Change to destroy later to be safe
   if( isspace(*(tk->curr)) ){
     tk->curr++;
     tk->start = tk->curr;
     tk->end = tk->curr;
     return NULL;
-  }
-    
+  }   
 
   // standard case functions here
   if(isdigit(*(tk->curr))){
     if(*(tk->curr) == '0'){
-      //check if space or end of string (zero)
+      //check if valid delimiator exists after the zero (zero-state)
       if(isDelim(*(tk->curr+1))){
 	      tk->current_state = zero;
 	      tk->curr++;
@@ -845,15 +835,14 @@ char *TKGetNextToken( TokenizerT * tk ) {
     if(*(tk->curr)=='/' && *(tk->curr+1)=='*'){
       if(isMultiComment(tk)) return NULL;
     }
-    else if(*(tk->curr)=='\\'&&*(tk->curr+1)=='\\'){
+    else if(*(tk->curr)=='/'&&*(tk->curr+1)=='/'){
       isSingleComment(tk);
       return NULL;
     }
     isCToken(tk);
   }
-
+  //tokens that start with alphabetic characters (word, keyword) are dealt with here
   else if(isalpha(*(tk->start))){
-    // keywords functions here
     isKeyword(tk);
     }
   else{
@@ -866,6 +855,10 @@ char *TKGetNextToken( TokenizerT * tk ) {
     tk->curr++;
     tk->start = tk->curr;
     tk->end = tk->curr;
+    return NULL;
+  }
+
+  if(tk->current_state == error){ 
     return NULL;
   }
   /*
@@ -890,11 +883,8 @@ char *TKGetNextToken( TokenizerT * tk ) {
   return_token = next;
   free(next);
 
-
   return return_token;
 }
-
-
 
 int main(int argc, char **argv) {
   if(argc<2){
@@ -904,7 +894,6 @@ int main(int argc, char **argv) {
   TokenizerT *tokenizer = TKCreate(argv[1]);
   
   while(*(tokenizer->curr)!='\0'){
-
     if(*(tokenizer->curr)=='\0'){
       // break;
     }
@@ -912,7 +901,6 @@ int main(int argc, char **argv) {
   }
 
   TKDestroy(tokenizer);
-
-
   return 0;
 }
+
