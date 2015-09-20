@@ -552,6 +552,7 @@ int isSingleQuote(TokenizerT *tk){
     }
      tk->curr++;
   }
+  tk->curr = tk->start;
   return 0;
 }
 
@@ -566,6 +567,7 @@ int isDoubleQuote(TokenizerT *tk){
     }
      tk->curr++;
   }
+  tk->curr = tk->start;
   return 0;
 }
 
