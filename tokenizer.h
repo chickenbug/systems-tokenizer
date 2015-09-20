@@ -77,6 +77,7 @@ void isMal(TokenizerT * tk );
 void isIncomplete(TokenizerT * tk);
 void isWord(TokenizerT * tk );
 void isDecimal(TokenizerT * tk );
+void isOCtalDecimal(TokenizerT * tk);
 void isOctal(TokenizerT * tk );
 void isHexadecimal(TokenizerT * tk );
 void isFloat(TokenizerT * tk );
