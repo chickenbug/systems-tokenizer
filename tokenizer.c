@@ -128,7 +128,7 @@ int isDelim(char ch){
      ||ch ==126
      ){return 1;}
   //tokens are delimited by escape characters
-  if( ch >= 0 && ch <=31) return 1;
+  if(isEscape(ch)) return 1;
   return 0;
 }
 
@@ -187,10 +187,10 @@ void isOctal(TokenizerT * tk ){
   else if( isdigit( *((tk->curr)+1) )){
     switch( *((tk->curr)+1) ){
     case '8':
-      isMal(tk);
+      isDecimal(tk);
       break;
     case '9':
-      isMal(tk);
+      isDecimal(tk);
       break;
     default:
       (tk->curr)++;
@@ -603,7 +603,7 @@ int isSingleComment(TokenizerT *tk){
 }
 
 int isEscape(char ch){
-  if((ch >= 0) && (ch <= 31)) return 1;
+  if(((ch >= 0) && (ch <= 31))|| ch >=127) return 1;
   return 0;
 }
 
