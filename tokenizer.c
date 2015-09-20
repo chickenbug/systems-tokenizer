@@ -32,38 +32,38 @@ typedef struct TokenizerT_ TokenizerT;
 
 
  const char *keyword_list[32] = {
-    "auto ",
-    "break ",
-    "case ",
-    "char ", 
-    "const ", 
-    "continue ", 
-    "default ", 
-    "do ", 
-    "double ",
-    "else ",
-    "enum ",
-    "extern ",
-    "float ",
-    "for ",
-    "goto ",
-    "if ",
-    "int ",
-    "long ",
-    "register ",
-    "return ",
-    "short ",
-    "signed ",
-    "sizeof ",
-    "static ",
-    "struct ",
-    "switch ",
-    "typedef ",
-    "union ",
-    "unsigned ",
-    "void ",
-    "volatile ",
-    "while "
+    "auto",
+    "break",
+    "case",
+    "char", 
+    "const", 
+    "continue", 
+    "default", 
+    "do", 
+    "double",
+    "else",
+    "enum",
+    "extern",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "int",
+    "long",
+    "register",
+    "return",
+    "short",
+    "signed",
+    "sizeof",
+    "static",
+    "struct",
+    "switch",
+    "typedef",
+    "union",
+    "unsigned",
+    "void",
+    "volatile",
+    "while"
   };
 
 //creates a tokenizer object containing the input string with a default state of error
@@ -530,9 +530,9 @@ void isKeyword(TokenizerT *tk){
   int i, string_len;
   for(i = 0; i < 32; i++){
     string_len = strlen( keyword_list[i] );
-     if( strncmp(tk->curr, keyword_list[i], string_len) ==0 ){
+    if( (strncmp(tk->curr, keyword_list[i], string_len) == 0) && isDelim(*(tk->curr+string_len)) ){
         tk->current_state = c_keyword;
-        tk->end = tk->start + (string_len-2);
+        tk->end = tk->start + (string_len-1);
 	tk->curr += string_len;        
 	return;
      }
@@ -571,7 +571,7 @@ int isDoubleQuote(TokenizerT *tk){
   return 0;
 }
 
-int isComment(TokenizerT *tk){
+int isMultiComment(TokenizerT *tk){
   tk->curr+=2;
   while(*(tk->curr) != '\0'){
     if( (*(tk->curr) == '*') && (*(tk->curr+1) == '/') ){
@@ -584,6 +584,22 @@ int isComment(TokenizerT *tk){
   }
   tk->curr = tk->start; 
   return 0;
+}
+
+int isSingleComment(TokenizerT *tk){
+  tk->curr+=2;
+  while(*(tk->curr) != '\0'){
+    if( (*(tk->curr) == '\n') ){
+      tk->curr++;
+      tk->start = tk->curr;
+      tk->end = tk->curr; 
+      return 1;
+    }
+     tk->curr++;
+  }
+  tk->start = tk->curr;
+  tk->end = tk->curr;
+  return 0;  
 }
 
 int isEscape(char ch){
@@ -762,7 +778,7 @@ void printToken(TokenizerT *tk, char *next){
     break;
   }
 
-  printf(" %s\n", next);
+  printf(" \"%s\"\n", next);
 }
 
 
@@ -826,7 +842,14 @@ char *TKGetNextToken( TokenizerT * tk ) {
   }
 
   else if(ispunct(*(tk->start))){
-      isCToken(tk);
+    if(*(tk->curr)=='/' && *(tk->curr+1)=='*'){
+      if(isMultiComment(tk)) return NULL;
+    }
+    else if(*(tk->curr)=='\\'&&*(tk->curr+1)=='\\'){
+      isSingleComment(tk);
+      return NULL;
+    }
+    isCToken(tk);
   }
 
   else if(isalpha(*(tk->start))){

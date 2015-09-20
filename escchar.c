@@ -3,7 +3,7 @@
 
 int main(int argc, char**argv){
 
-  printf("emily\b \a");
+  printf("0x4356abdc 0777 [] ");
   return 0;
 
 
