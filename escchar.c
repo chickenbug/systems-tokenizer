@@ -2,8 +2,8 @@
 #include<stdlib.h>
 
 int main(int argc, char**argv){
-
-  printf("a+b 10. 0");
+  char c='\010';
+  printf("%c", c);
   return 0;
 
 
