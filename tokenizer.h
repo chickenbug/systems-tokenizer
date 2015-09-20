@@ -86,6 +86,7 @@ void isKeyword(TokenizerT *tk);
 int isSingleQuote(TokenizerT *tk);
 int isDoubleQuote(TokenizerT *tk);
 int isDelim(char ch);
+int isEscape(char ch);
 
 void printToken(TokenizerT *tk, char *next);
 

@@ -586,7 +586,10 @@ int isComment(TokenizerT *tk){
   return 0;
 }
 
-
+int isEscape(char ch){
+  if((ch >= 0) && (ch <= 31)) return 1;
+  return 0;
+}
 
 void printToken(TokenizerT *tk, char *next){
   switch( (tk->current_state) ){
@@ -770,10 +773,10 @@ char *TKGetNextToken( TokenizerT * tk ) {
 
   //skips past blank space
   //Change to destroy later to be safe
-  if( isspace(*(tk->start)) ){
-    tk->start++;
-    tk->curr = tk->start;
-    tk->end = tk->start;
+  if( isspace(*(tk->curr)) ){
+    tk->curr++;
+    tk->start = tk->curr;
+    tk->end = tk->curr;
     return NULL;
   }
     
@@ -831,7 +834,15 @@ char *TKGetNextToken( TokenizerT * tk ) {
     isKeyword(tk);
     }
   else{
-    printf("something is very wrong\n");
+    if(isEscape(*(tk->curr))){ 
+      printf("[%#x]\n", *(tk->curr));
+    }
+    else{ 
+      printf("something is very wrong\n");
+    }
+    tk->curr++;
+    tk->start = tk->curr;
+    tk->end = tk->curr;
     return NULL;
   }
   /*
@@ -839,13 +850,6 @@ char *TKGetNextToken( TokenizerT * tk ) {
     i.e. printouts that are wrong 
     Doing so allows us to free the pointer, next
   */
-
-  //prevent an error to get memory allocation and get returned as a token
-  if(tk->current_state==7){
-    //print temporary message
-    printf("invalid token\n");
-    return NULL;
-  }
 
   //create copy of string
   char *next = (char*)calloc( ((tk->end)-(tk->start))+1, sizeof(char) );

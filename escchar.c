@@ -3,7 +3,7 @@
 
 int main(int argc, char**argv){
 
-  printf("\"");
+  printf("emily\b \a");
   return 0;
 
 
