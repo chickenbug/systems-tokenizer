@@ -92,8 +92,7 @@ int isDelim(char ch){
      ch == 33
      ||ch == 37
      ||ch == 38
-     ||((ch>=40)&&(ch<=45))
-     ||ch == 47
+     ||((ch>=40)&&(ch<= 47))
      ||ch == 58
      ||((ch>=60)&&(ch<=63))
      ||ch == 91
@@ -127,7 +126,7 @@ void isWord(TokenizerT * tk ){
 
 //Recursively checks if token is a Decimal, passing to isFloat or isFloatE is as necessary 
 void isDecimal(TokenizerT * tk ){
-  if(isDelim(*(tk->curr+1))){
+  if(isDelim(*(tk->curr+1)) && *(tk->curr+1)!= '.'){
     tk->current_state = decimal;
     (tk->end) = (tk->curr);
     tk->curr++;
@@ -791,20 +790,21 @@ char *TKGetNextToken( TokenizerT * tk ) {
   if(isdigit(*(tk->curr))){
     if(*(tk->curr) == '0'){
       //check if valid delimiator exists after the zero (zero-state)
-      if(isDelim(*(tk->curr+1))){
+      if(isDelim(*(tk->curr+1)) && *(tk->curr+1) != '.'){
 	      tk->current_state = zero;
 	      tk->curr++;
       } 
       else{
 	      switch( *((tk->curr) + 1) ){
 	        case '.':
-		  if(isDelim(*(tk->curr+2))){
-		    isMal(tk);
-		  }
-		  else{
-		    tk->curr++;
-		    isFloat(tk);
-		  }
+		        if(isDelim(*(tk->curr+2))){
+		          tk->current_state = zero;
+              tk->curr++;
+		        }
+		        else{
+		          tk->curr++;
+		          isFloat(tk);
+		        }
 	          break;
 	        case 'x':
 	          tk->curr++;
