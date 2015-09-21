@@ -1,3 +1,10 @@
+Kinh Hoang
+Emily Ng
+
+TESTCASES
+(For the purpose of writing our testcases, physical escape characters are represented by their string representations in this file. For example, the physical backspace character is shown as "\b".)
+
+
 Case			Input				Expected Output
 
 
@@ -19,6 +26,9 @@ Word deliniated		"[dogs] ca56ts claws\b"		leftbracket "["
 Malformed Word	       	"apple>=pear@berry->.a"		word "apple"
 	  						greater than or equal ">="
 							Malformed Token, Moving to Next
+							structurepointer "->"
+							structuremember "."
+							word "a"     
 
 Basic numbers		"03254 08124 1.0"		octal "03254"
       			       				decimal "08124"
@@ -53,9 +63,10 @@ Keywords		"enum if() sizeof switch234"	C Keyword "enum"
 							C Keyword "sizeof"
 							word "switch234"
 
-Single Line Comments 	""		
+Single Line Comments 	"enum wow//this is a comment"	C Keyword "enum"
+       	    		      		     		word "wow"		
        	    			    	
-Multiple Line Comments	"789.4\*today*\foo"		float "789.4"
+Multiple Line Comments	"789.4/*today*/foo"		float "789.4"
 	      						word "foo"
 
 Single quotes		"hello:'hi' 6 '3"		word "hello"
@@ -70,19 +81,21 @@ Single quotes		"hello:'hi' 6 '3"		word "hello"
 
 COMPLEX CASES
 
-Quotes 		"'  # :! ran$ ' '123' g'13.0' [\"a \t\n k\"]/*whee!\nword"	string "'  # :! ran$ '"
-       			      	      	      	      	   		 	string "'123'"
-										 Malformed Token, Moving to Next
-									 	 leftbracket "[" 
-									 	 string ""a  
-									  	 k""
-									  	 rightbracket "]"
-       			      	      	   				 	 divide "/"
-									 	 multiply "*"
-									 	 word "whee"
-									  	 negate "!"
-									  	 word "word"
-							
+Quotes 		"'  # :! ran$ ' '123' g'13.0' [\"a \t\n k\"]/*whee!\ncom"	string "'  # :! ran$ '"
+		      	      	      	      	   				string "'123'"
+										Malformed Token, Moving to Next
+										structuremember "."
+										Malformed Token, Moving to Next
+										leftbracket "["
+										string ""a  
+										 k""
+										 rightbracket "]"
+										 divide "/"
+										 multiply "*"
+										 word "whee"
+										 negate "!"
+										 word "com"
+
 
 Nested Operators,	"{fun}~'c'&&[10*3(var)]^=17.325E-2\v00230"	Malformed Token, Moving to Next
 Invalid Punctuation       						onescomplement "~"
@@ -103,7 +116,8 @@ Invalid Punctuation       						onescomplement "~"
 
 
 Multiple C Operators,	"\n\r\\n 0.++++=..*="				Malformed Token, Moving to Next
-Escape chars at start	  			 			Malformed Token, Moving to Next
+Escape chars at start	  			 			zero "0"
+       	     								structuremember "."
 									inc "++"
 									inc "++"
 									assignment operator "="
@@ -111,13 +125,12 @@ Escape chars at start	  			 			Malformed Token, Moving to Next
 									structuremember "."
 									multiply equals "*="
 
-
-
-Malformed tokens produce an error message of "Malformed Token, Moving to Next". 
-
-Delimiters are  valid C-operators (excluding '+', '-', '.', ''', and '"'), escape characters, and whitespace.
-If a token starts with or contains  any other symbol (such as '#' or '@'), then the token is malformed unless it is the case of MATCHING single or double quotes.
-
-Tokens that contain an unmatched single or double quote are always malformed. Only if the token contains a matched pair of single or double quotes and there is a delimiter in front of the quotes, then the contents within the quotes are a string token. If there are escape characters within a string token, they do not produce a hexadecimal print message.  The string token is printed out with single or double quotes around it. 
-
-
+Escape Octal Chars	"10.2.3 0.\010 \041 \005 \136"			float "10.2"
+       	     			       	    	 			structuremember "."
+									decimal "3"
+									zero "0"
+									structuremember "."
+									[0x8]
+									negate "!"
+									[0x5]
+									bitwise exclusive or "^"
