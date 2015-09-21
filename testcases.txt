@@ -14,7 +14,7 @@ No Arg			no argument			"Error: Incorrect Number of Arguments"
 
 Empty arg		"" 				
 
-Basic word		"cats"
+Basic word		"cats"				word "cats"
 
 Word deliniated		"[dogs] ca56ts claws\b"		leftbracket "["
      				     			word "dogs"
